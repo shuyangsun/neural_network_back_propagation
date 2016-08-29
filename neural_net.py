@@ -2,26 +2,31 @@ import doctest
 import numpy as np
 
 
-def add_ones_column(matrix):
+def add_ones(matrix, is_vector_column=True):
     """
     Insert a column filled with 1's at index 0 to the matrix.
     :param matrix: The matrix to add ones column to.
+    :param is_vector_column: Are the vectors in matrix stored as column instead of row.
     :return The matrix after inserting ones column at index 0.
 
     >>> A = np.matrix(np.arange(5))
-    >>> B = add_ones_column(A)
-    >>> (B == np.matrix([1, 0, 1, 2, 3, 4])).all()
+    >>> B = add_ones(A, False)
+    >>> (B == np.matrix('1 0 1 2 3 4')).all()
     True
     >>> A = np.matrix(np.zeros(1))
-    >>> B = add_ones_column(A)
-    >>> (B == np.matrix([1, 0])).all()
+    >>> B = add_ones(A, False)
+    >>> (B == np.matrix('1 0')).all()
     True
     >>> A = np.matrix(np.zeros(0))
-    >>> B = add_ones_column(A)
-    >>> (B == np.matrix([1])).all()
+    >>> B = add_ones(A, False)
+    >>> (B == np.matrix('1')).all()
+    True
+    >>> A = np.matrix(np.zeros(3)).T
+    >>> B = add_ones(A, True)
+    >>> (B == np.matrix('1 0 0 0').T).all()
     True
     """
-    return np.insert(matrix, 0, np.array(1), axis=1)
+    return np.insert(matrix, 0, np.array(1), axis=0 if is_vector_column else 1)
 
 
 def rand_Theta_from_neural_network_arc(num_features, num_layer_units, num_classes, EPSILON=1):
@@ -94,9 +99,38 @@ def change_range(Theta, EPSILON=1):
     >>> Theta_ranged = change_range(Theta, 2)
     >>> (Theta_ranged >= -2).all() and (Theta_ranged <= 2).all()
     True
+    >>> Theta = np.random.rand(0)
+    >>> Theta_ranged = change_range(Theta)
+    >>> np.size(Theta_ranged, axis=0)
+    0
+    >>> Theta = np.random.rand(30, 10)
+    >>> Theta_ranged = change_range(Theta)
+    >>> (Theta_ranged >= -1).all() and (Theta_ranged <= 1).all()
+    True
     """
     return Theta * 2 * EPSILON - EPSILON
 
+
+def forward_prop(x_i, Theta):
+    """
+    Get the output layer values based on input layer and hidden layer thetas, using forward propagation algorithm.
+    :param x_i: Input layer values.
+    :param Theta: Three dimensional array containing all the Theta values.
+    :return: Output layer values.
+    >>> x = np.matrix('1 2 3').T
+    >>> Theta = [np.matrix('1 1 1 1').T]
+    >>> np.sum(forward_prop(x, Theta))
+    7
+    >>> x = np.matrix('1 2 3').T
+    >>> Theta = [np.matrix('1 1 1 1; 0 0 0 0; 2 2 2 2').T, np.matrix('1 2 0 1; 1 0 0 0').T, np.matrix('1 1 1').T]
+    >>> np.sum(forward_prop(x, Theta))
+    31
+    """
+    a_i = x_i
+    for theta_i in Theta:
+        a_i = add_ones(a_i)
+        a_i = theta_i.T @ a_i
+    return a_i
 
 if __name__ == '__main__':
     doctest.testmod()
