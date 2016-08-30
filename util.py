@@ -29,7 +29,7 @@ def add_ones(matrix, is_vector_column=True):
     return np.insert(matrix, 0, np.array(1), axis=0 if is_vector_column else 1)
 
 
-def rand_Theta_from_neural_network_arc(num_features, num_classes, *num_layer_units, EPSILON=1):
+def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
     """
     This function generates a random set of Thetas for neural network calculation.
     :param EPSILON: The EPSILON value used for range (-EPSILON < theta < EPSILON).
@@ -38,7 +38,7 @@ def rand_Theta_from_neural_network_arc(num_features, num_classes, *num_layer_uni
     :param num_classes: Number of classification classes.
     :return: A list containing numpy matrices containing randomly generated Thetas.
 
-    >>> Theta = rand_Theta_from_neural_network_arc(3, 2, [3])
+    >>> Theta = rand_Theta(3, 2, [3])
     >>> len(Theta)
     2
     >>> np.size(Theta[0], axis=0)
@@ -49,7 +49,7 @@ def rand_Theta_from_neural_network_arc(num_features, num_classes, *num_layer_uni
     4
     >>> np.size(Theta[1], axis=1)
     1
-    >>> Theta = rand_Theta_from_neural_network_arc(400, 10, 600, 600, 600, EPSILON=2)
+    >>> Theta = rand_Theta(400, 10, 600, 600, 600, EPSILON=2)
     >>> len(Theta)
     4
     >>> np.size(Theta[0], axis=0)
@@ -70,17 +70,19 @@ def rand_Theta_from_neural_network_arc(num_features, num_classes, *num_layer_uni
     10
     """
     # Convert num_layer_units to np array in case it's a generator.
+    if num_classes <= 2:
+        num_classes = 1
     num_layer_units = np.array(num_layer_units)
     num_layer_units = num_layer_units.flatten()
     result = list()
-    theta_cur = np.matrix(np.random.rand(num_features + 1, num_layer_units[0]))
+    theta_cur = np.matrix(np.random.rand(num_features + 1, num_layer_units[0] if len(num_layer_units) else num_classes))
     theta_cur = change_range(theta_cur, EPSILON)
     result.append(theta_cur)
     for i, num_unit_current_layer in enumerate(num_layer_units):
         if i < len(num_layer_units) - 1:
             num_unit_next_layer = num_layer_units[i + 1]
         else:
-            num_unit_next_layer = num_classes if num_classes > 2 else 1
+            num_unit_next_layer = num_classes
         theta_cur = np.matrix(np.random.rand(num_unit_current_layer + 1, num_unit_next_layer))
         change_range(theta_cur, EPSILON)
         result.append(theta_cur)
