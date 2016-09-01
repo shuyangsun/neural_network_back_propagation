@@ -2,7 +2,7 @@ import doctest
 import numpy as np
 
 
-def add_ones(matrix, is_vector_column=True):
+def add_ones(matrix, is_vector_column=False):
     """
     Insert a column filled with 1's at index 0 to the matrix.
     :param matrix: The matrix to add ones column to.
@@ -10,15 +10,15 @@ def add_ones(matrix, is_vector_column=True):
     :return The matrix after inserting ones column at index 0.
 
     >>> A = np.matrix(np.arange(5))
-    >>> B = add_ones(A, False)
+    >>> B = add_ones(A)
     >>> (B == np.matrix('1 0 1 2 3 4')).all()
     True
     >>> A = np.matrix(np.zeros(1))
-    >>> B = add_ones(A, False)
+    >>> B = add_ones(A)
     >>> (B == np.matrix('1 0')).all()
     True
     >>> A = np.matrix(np.zeros(0))
-    >>> B = add_ones(A, False)
+    >>> B = add_ones(A)
     >>> (B == np.matrix('1')).all()
     True
     >>> A = np.matrix(np.zeros(3)).T
@@ -42,32 +42,32 @@ def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
     >>> len(Theta)
     2
     >>> np.size(Theta[0], axis=0)
-    4
-    >>> np.size(Theta[0], axis=1)
     3
-    >>> np.size(Theta[1], axis=0)
+    >>> np.size(Theta[0], axis=1)
     4
-    >>> np.size(Theta[1], axis=1)
+    >>> np.size(Theta[1], axis=0)
     1
+    >>> np.size(Theta[1], axis=1)
+    4
     >>> Theta = rand_Theta(400, 10, 600, 600, 600, EPSILON=2)
     >>> len(Theta)
     4
     >>> np.size(Theta[0], axis=0)
-    401
+    600
     >>> np.size(Theta[0], axis=1)
-    600
+    401
     >>> np.size(Theta[1], axis=0)
-    601
+    600
     >>> np.size(Theta[1], axis=1)
-    600
+    601
     >>> np.size(Theta[2], axis=0)
-    601
-    >>> np.size(Theta[2], axis=1)
     600
-    >>> np.size(Theta[3], axis=0)
+    >>> np.size(Theta[2], axis=1)
     601
-    >>> np.size(Theta[3], axis=1)
+    >>> np.size(Theta[3], axis=0)
     10
+    >>> np.size(Theta[3], axis=1)
+    601
     """
     # Convert num_layer_units to np array in case it's a generator.
     if num_classes <= 2:
@@ -75,7 +75,7 @@ def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
     num_layer_units = np.array(num_layer_units)
     num_layer_units = num_layer_units.flatten()
     result = list()
-    theta_cur = np.matrix(np.random.rand(num_features + 1, num_layer_units[0] if len(num_layer_units) else num_classes))
+    theta_cur = np.matrix(np.random.rand(num_layer_units[0] if len(num_layer_units) else num_classes, num_features + 1))
     theta_cur = change_range(theta_cur, EPSILON)
     result.append(theta_cur)
     for i, num_unit_current_layer in enumerate(num_layer_units):
@@ -83,7 +83,7 @@ def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
             num_unit_next_layer = num_layer_units[i + 1]
         else:
             num_unit_next_layer = num_classes
-        theta_cur = np.matrix(np.random.rand(num_unit_current_layer + 1, num_unit_next_layer))
+        theta_cur = np.matrix(np.random.rand(num_unit_next_layer, num_unit_current_layer + 1))
         change_range(theta_cur, EPSILON)
         result.append(theta_cur)
     return result
