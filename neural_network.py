@@ -3,7 +3,7 @@ import numpy as np
 import neural_network_back_propagation.util as util
 
 
-def forward_prop(x_i, Theta):
+def nn_forward_prop(x_i, Theta):
     """
     Get the all the values in the layer based on input values and Theta, using forward propagation algorithm.
     :param x_i: Input layer values.
@@ -11,7 +11,7 @@ def forward_prop(x_i, Theta):
     :return: Three dimensional list containing all values in the neural network.
     >>> x = np.matrix('1 2 3')
     >>> Theta = [np.matrix('1 1 1 1')]
-    >>> result = forward_prop(x, Theta)
+    >>> result = nn_forward_prop(x, Theta)
     >>> len(result)
     2
     >>> result[0].size
@@ -22,7 +22,7 @@ def forward_prop(x_i, Theta):
     7
     >>> x = np.matrix('1 2 3')
     >>> Theta = [np.matrix('1 1 1 1; 0 0 0 0; 2 2 2 2'), np.matrix('1 2 0 1; 1 0 0 0'), np.matrix('1 1 1')]
-    >>> result = forward_prop(x, Theta)
+    >>> result = nn_forward_prop(x, Theta)
     >>> len(result)
     4
     >>> result[0].size
@@ -39,7 +39,7 @@ def forward_prop(x_i, Theta):
     >>> num_classes = 10
     >>> x = np.matrix(np.random.rand(num_features))
     >>> Theta = util.rand_Theta(num_features, num_classes, 600, 600, 600, EPSILON=5)
-    >>> result = forward_prop(x, Theta)
+    >>> result = nn_forward_prop(x, Theta)
     >>> np.size(result[-1])
     10
     """
@@ -54,7 +54,7 @@ def forward_prop(x_i, Theta):
     return result
 
 
-def J_Theta(h_theta_x, y, lamb=0, Theta=None):
+def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     """
     Calculate the cost based on given hypothesis, output value, regularization parameter lambda and Theta.
     :param h_theta_x: Hypothesis matrix (probabilities),\
@@ -66,21 +66,21 @@ def J_Theta(h_theta_x, y, lamb=0, Theta=None):
     >>> import math
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
-    >>> cost = J_Theta(h_theta_x, y)
+    >>> cost = nn_J_Theta(h_theta_x, y)
     >>> cost == - math.log(0.5) * 4
     True
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
     >>> Theta = [np.matrix('1 1 1')]
     >>> lamb = 2
-    >>> cost = J_Theta(h_theta_x, y, lamb, Theta)
+    >>> cost = nn_J_Theta(h_theta_x, y, lamb, Theta)
     >>> cost == - math.log(0.5) * 4 + 1
     True
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
     >>> Theta = [np.matrix('1 1 1'), np.matrix('1 1 1; 1 1 1; 1 1 1')]
     >>> lamb = 4
-    >>> cost = J_Theta(h_theta_x, y, lamb, Theta)
+    >>> cost = nn_J_Theta(h_theta_x, y, lamb, Theta)
     >>> cost == - math.log(0.5) * 4 + 8
     True
     """
@@ -96,7 +96,7 @@ def J_Theta(h_theta_x, y, lamb=0, Theta=None):
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
 
-def delta(neurons, Theta, y):
+def nn_delta(neurons, Theta, y):
     """
     Calculates errors using back propagation algorithm.
     :param neurons: Two dimensional list of neurons, including bias units.
@@ -108,7 +108,7 @@ def delta(neurons, Theta, y):
     >>> output_layer_count = 5
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
-    >>> neurons = forward_prop(x_i, Theta)
+    >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
     >>> result = delta(neurons, Theta, y)
@@ -123,7 +123,7 @@ def delta(neurons, Theta, y):
     >>> output_layer_count = 400
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
-    >>> neurons = forward_prop(x_i, Theta)
+    >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
     >>> result = delta(neurons, Theta, y)
@@ -138,7 +138,7 @@ def delta(neurons, Theta, y):
     >>> output_layer_count = 2
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
-    >>> neurons = forward_prop(x_i, Theta)
+    >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
     >>> result = delta(neurons, Theta, y)
@@ -163,6 +163,23 @@ def delta(neurons, Theta, y):
             delta_cur_layer = np.delete(delta_cur_layer, 0, 1)
             result.append(delta_cur_layer)
     return list(reversed(result))
+
+
+def nn_Delta(Delta, delta, neurons):
+    """
+    Compute Delta for further computing of derivative of J(Theta) - D.
+    :param Delta: Original Delta from last iteration.
+    :param delta: Error rates computed with back propagation algorithm.
+    :param neurons: Two dimensional list of neurons, including bias units.
+    :return: List of Delta, shape should match Theta.
+    """
+    result = list()
+    for (l, ele) in enumerate(Delta):
+        a_l = neurons[l]
+        Delta_l = Delta[l] + delta[l + 1] @ a_l.T
+        result.append(Delta_l)
+    return result
+
 
 if __name__ == '__main__':
     doctest.testmod()
