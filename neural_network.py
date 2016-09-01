@@ -54,6 +54,22 @@ def forward_prop(x_i, Theta):
     return result
 
 
+def cost(h_theta_x, y, Theta, lamb=0):
+    """
+    Calculate the cost based on given hypothesis, output value, regularization parameter lambda and Theta.
+    :param h_theta_x: Hypothesis matrix (probabilities),\
+    should be a two dimensional matrix if number of class is greater than 2.
+    :param y: Output values (1 or 0), shape should match hypothesis.
+    :param Theta: Weights for regularization.
+    :param lamb: Regularization parameter.
+    :return: The cost of current hypothesis.
+    """
+    m = np.size(h_theta_x, axis=0)
+    cost_wo_regularization = np.sum(np.multiply(y, np.log(h_theta_x)) + np.multiply((1 - y), np.log(1 - h_theta_x))) / m
+    theta_squared_sum = np.sum(np.power(Theta, 2))
+    return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
+
+
 def Delta(neurons, Theta, y):
     """
     Calculates errors using back propagation algorithm.
@@ -121,7 +137,6 @@ def Delta(neurons, Theta, y):
             delta_cur_layer = np.delete(delta_cur_layer, 0, 0)
             result.append(delta_cur_layer)
     return list(reversed(result))
-
 
 if __name__ == '__main__':
     doctest.testmod()
