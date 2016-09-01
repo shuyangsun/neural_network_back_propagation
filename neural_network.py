@@ -96,7 +96,7 @@ def J_Theta(h_theta_x, y, lamb=0, Theta=None):
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
 
-def Delta(neurons, Theta, y):
+def delta(neurons, Theta, y):
     """
     Calculates errors using back propagation algorithm.
     :param neurons: Two dimensional list of neurons, including bias units.
@@ -111,7 +111,7 @@ def Delta(neurons, Theta, y):
     >>> neurons = forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = Delta(neurons, Theta, y)
+    >>> result = delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -126,7 +126,7 @@ def Delta(neurons, Theta, y):
     >>> neurons = forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = Delta(neurons, Theta, y)
+    >>> result = delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -141,7 +141,7 @@ def Delta(neurons, Theta, y):
     >>> neurons = forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = Delta(neurons, Theta, y)
+    >>> result = delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delta.size == layer_count for delta, layer_count in zip(result, hidden_layer_counts)])
