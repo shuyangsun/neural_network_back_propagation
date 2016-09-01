@@ -43,14 +43,14 @@ def forward_prop(x_i, Theta):
     >>> np.size(result[-1])
     10
     """
-    a_i = x_i
-    a_i = util.add_ones(a_i)
-    result = [a_i]
-    for i, theta_i in enumerate(Theta):
-        a_i = (theta_i @ a_i.T).T
+    a_l = x_i
+    a_l = util.add_ones(a_l)
+    result = [a_l]
+    for i, theta_l in enumerate(Theta):
+        a_l = (theta_l @ a_l.T).T
         if i < len(Theta) - 1:
-            a_i = util.add_ones(a_i)
-        result.append(a_i)
+            a_l = util.add_ones(a_l)
+        result.append(a_l)
     return result
 
 
@@ -155,11 +155,11 @@ def Delta(neurons, Theta, y):
     neurons_rev = list(reversed(neurons))
     Theta_rev = list(reversed(Theta))
     result = [neurons_rev[0] - y]
-    for i, theta_i in enumerate(Theta_rev):
-        if i < len(Theta_rev) - 1:
+    for l, theta_l in enumerate(Theta_rev):
+        if l < len(Theta_rev) - 1:
             delta_next_layer = result[-1]
-            a_i = neurons_rev[i + 1]
-            delta_cur_layer = np.multiply(delta_next_layer @ theta_i, np.multiply(a_i, (1 - a_i)))
+            a_l = neurons_rev[l + 1]
+            delta_cur_layer = np.multiply(delta_next_layer @ theta_l, np.multiply(a_l, (1 - a_l)))
             delta_cur_layer = np.delete(delta_cur_layer, 0, 1)
             result.append(delta_cur_layer)
     return list(reversed(result))
