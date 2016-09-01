@@ -54,19 +54,45 @@ def forward_prop(x_i, Theta):
     return result
 
 
-def cost(h_theta_x, y, Theta, lamb=0):
+def J_Theta(h_theta_x, y, lamb=0, Theta=None):
     """
     Calculate the cost based on given hypothesis, output value, regularization parameter lambda and Theta.
     :param h_theta_x: Hypothesis matrix (probabilities),\
     should be a two dimensional matrix if number of class is greater than 2.
     :param y: Output values (1 or 0), shape should match hypothesis.
-    :param Theta: Weights for regularization.
     :param lamb: Regularization parameter.
+    :param Theta: List of weights for regularization.
     :return: The cost of current hypothesis.
+    >>> import math
+    >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
+    >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
+    >>> cost = J_Theta(h_theta_x, y)
+    >>> cost == - math.log(0.5) * 4
+    True
+    >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
+    >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
+    >>> Theta = [np.matrix('1 1 1')]
+    >>> lamb = 2
+    >>> cost = J_Theta(h_theta_x, y, lamb, Theta)
+    >>> cost == - math.log(0.5) * 4 + 1
+    True
+    >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
+    >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
+    >>> Theta = [np.matrix('1 1 1'), np.matrix('1 1 1; 1 1 1; 1 1 1')]
+    >>> lamb = 4
+    >>> cost = J_Theta(h_theta_x, y, lamb, Theta)
+    >>> cost == - math.log(0.5) * 4 + 8
+    True
     """
     m = np.size(h_theta_x, axis=0)
-    cost_wo_regularization = np.sum(np.multiply(y, np.log(h_theta_x)) + np.multiply((1 - y), np.log(1 - h_theta_x))) / m
-    theta_squared_sum = np.sum(np.power(Theta, 2))
+    cost_y_is_0 = np.multiply((1 - y), np.log(1 - h_theta_x))
+    cost_y_is_1 = np.multiply(y, np.log(h_theta_x))
+    cost_wo_regularization = - np.sum(cost_y_is_0 + cost_y_is_1) / m
+    if Theta is None or len(Theta) == 0:
+        theta_squared_sum = 0
+    else:
+        theta_squared_sums = [np.sum(np.power(theta_i, 2)) for theta_i in Theta]
+        theta_squared_sum = sum(theta_squared_sums)
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
 
