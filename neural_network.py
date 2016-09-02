@@ -111,7 +111,7 @@ def nn_delta(neurons, Theta, y):
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = delta(neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -126,7 +126,7 @@ def nn_delta(neurons, Theta, y):
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = delta(neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -141,7 +141,7 @@ def nn_delta(neurons, Theta, y):
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = delta(neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delta.size == layer_count for delta, layer_count in zip(result, hidden_layer_counts)])
@@ -172,6 +172,14 @@ def nn_Delta(Delta, delta, neurons):
     :param delta: Error rates computed with back propagation algorithm.
     :param neurons: Two dimensional list of neurons, including bias units.
     :return: List of Delta, shape should match Theta.
+    >>> Delta = util.rand_Theta(10, 5, 10, 10)
+    >>> len(Delta)
+    4
+    >>> delta = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
+    >>> neurons = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
+    >>> result = nn_Delta(Delta, delta, neurons)
+    >>> result is not None and len(result) > 0
+    True
     """
     result = list()
     for (l, ele) in enumerate(Delta):

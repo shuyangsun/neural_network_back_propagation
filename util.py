@@ -69,9 +69,10 @@ def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
     >>> np.size(Theta[3], axis=1)
     601
     """
-    # Convert num_layer_units to np array in case it's a generator.
     if num_classes <= 2:
         num_classes = 1
+
+    # Convert num_layer_units to np array in case it's a generator.
     num_layer_units = np.array(num_layer_units)
     num_layer_units = num_layer_units.flatten()
     result = list()
@@ -84,10 +85,35 @@ def rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=1):
         else:
             num_unit_next_layer = num_classes
         theta_cur = np.matrix(np.random.rand(num_unit_next_layer, num_unit_current_layer + 1))
-        change_range(theta_cur, EPSILON)
+        theta_cur = change_range(theta_cur, EPSILON)
         result.append(theta_cur)
     return result
 
+
+def zero_Delta(num_features, num_classes, *num_layer_units):
+    """
+    Generates a three dimensional list of Deltas with zero as their value, used for back propagation calculation.
+    :param num_features: Number of features.
+    :param num_classes: Number of classes.
+    :param num_layer_units: List of number of neurons (without bias units) in each layer.
+    :return: Delta with zero values that matches Theta's dimension.
+    >>> result = zero_Delta(3, 2, [3])
+    >>> len(result)
+    2
+    >>> np.size(result[0], axis=0)
+    3
+    >>> np.size(result[0], axis=1)
+    4
+    >>> np.size(result[1], axis=0)
+    1
+    >>> np.size(result[1], axis=1)
+    4
+    >>> for ele in result:
+    ...     (ele == 0).all()
+    True
+    True
+    """
+    return rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=0)
 
 def change_range(Theta, EPSILON=1):
     """
