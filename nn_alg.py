@@ -267,17 +267,7 @@ def nn_grad_check(h_theta_x, y, D, Theta, lamb=0, EPSILON=0.1):
                 else:
                     Theta_plus[l][i, j] = theta_l_i_j_original
                     Theta_minus[l][i, j] = theta_l_i_j_original
-    return True
-
-
-def nn_grad_approx(h_theta_x, y, lamb=0, Theta=None, l=0, i=0, j=0, EPSILON=0.1):
-    Theta_plus = Theta.copy()
-    Theta_minus = Theta.copy()
-    Theta_plus[l][i, j] += EPSILON
-    Theta_minus[l][i, j] -= EPSILON
-    J_Theta_plus = nn_J_Theta(h_theta_x, y, lamb, Theta_plus)
-    J_Theta_minus = nn_J_Theta(h_theta_x, y, lamb, Theta_minus)
-    return (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
+    return True,
 
 if __name__ == '__main__':
     doctest.testmod()
