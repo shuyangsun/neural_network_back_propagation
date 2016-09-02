@@ -172,19 +172,27 @@ def nn_Delta(Delta, delta, neurons):
     :param delta: Error rates computed with back propagation algorithm.
     :param neurons: Two dimensional list of neurons, including bias units.
     :return: List of Delta, shape should match Theta.
-    >>> Delta = util.rand_Theta(10, 5, 10, 10)
-    >>> len(Delta)
-    4
+    >>> Delta = util.zero_Delta(10, 5, 10, 10)
     >>> delta = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
-    >>> neurons = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
+    >>> neurons = [np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(5))]
     >>> result = nn_Delta(Delta, delta, neurons)
-    >>> result is not None and len(result) > 0
+    >>> for ele in result:
+    ...     (ele == 1).all()
+    True
+    True
+    True
+    >>> Delta = util.zero_Delta(5, 2)
+    >>> delta = [np.matrix(np.ones(5)), np.matrix(np.ones(2))]
+    >>> neurons = [np.matrix(np.ones(6))]
+    >>> result = nn_Delta(Delta, delta, neurons)
+    >>> for ele in result:
+    ...     (ele == 1).all()
     True
     """
     result = list()
     for (l, ele) in enumerate(Delta):
         a_l = neurons[l]
-        Delta_l = Delta[l] + delta[l + 1] @ a_l.T
+        Delta_l = Delta[l] + (a_l.T @ delta[l + 1]).T
         result.append(Delta_l)
     return result
 
