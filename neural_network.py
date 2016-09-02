@@ -176,15 +176,35 @@ def nn_Delta(Delta, delta, neurons):
     >>> delta = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
     >>> neurons = [np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(5))]
     >>> result = nn_Delta(Delta, delta, neurons)
+    >>> len(result)
+    3
+    >>> np.size(result[0], axis=0)
+    10
+    >>> np.size(result[0], axis=1)
+    11
+    >>> np.size(result[1], axis=0)
+    10
+    >>> np.size(result[1], axis=1)
+    11
+    >>> np.size(result[2], axis=0)
+    5
+    >>> np.size(result[2], axis=1)
+    11
     >>> for ele in result:
     ...     (ele == 1).all()
     True
     True
     True
     >>> Delta = util.zero_Delta(5, 2)
-    >>> delta = [np.matrix(np.ones(5)), np.matrix(np.ones(2))]
-    >>> neurons = [np.matrix(np.ones(6))]
+    >>> delta = [np.matrix(np.ones(5)), np.matrix(np.ones(1))]
+    >>> neurons = [np.matrix(np.ones(6)), np.matrix(np.ones(1))]
     >>> result = nn_Delta(Delta, delta, neurons)
+    >>> len(result)
+    1
+    >>> np.size(result[0], axis=0)
+    1
+    >>> np.size(result[0], axis=1)
+    6
     >>> for ele in result:
     ...     (ele == 1).all()
     True
@@ -195,7 +215,6 @@ def nn_Delta(Delta, delta, neurons):
         Delta_l = Delta[l] + (a_l.T @ delta[l + 1]).T
         result.append(Delta_l)
     return result
-
 
 if __name__ == '__main__':
     doctest.testmod()
