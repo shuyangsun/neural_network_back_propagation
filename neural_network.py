@@ -12,6 +12,8 @@ def nn_forward_prop(x_i, Theta):
     >>> x = np.matrix('1 2 3')
     >>> Theta = [np.matrix('1 1 1 1')]
     >>> result = nn_forward_prop(x, Theta)
+    >>> (x == np.matrix('1 2 3')).all()
+    True
     >>> len(result)
     2
     >>> result[0].size
@@ -215,6 +217,39 @@ def nn_Delta(Delta, delta, neurons):
         Delta_l = Delta[l] + (a_l.T @ delta[l + 1]).T
         result.append(Delta_l)
     return result
+
+
+def nn_D(m, Delta, Theta, lamb):
+    """
+    Calculates D (derivative of cost function) for J(Theta).
+    :param m: Number of training samples.
+    :param Delta: Three dimensional list of Delta computed using back propagation algorithm.
+    :param Theta: Three dimensional list of weights.
+    :param lamb: Regularization parameter lambda.
+    :return: Three dimensional list of derivative of J(Theta).
+    >>> m = 5
+    >>> Delta = [np.matrix('5 5 5 5')]
+    >>> Theta = [np.matrix('1 1 1 1')]
+    >>> lamb = 5
+    >>> result = nn_D(m, Delta, Theta, lamb)
+    >>> len(result)
+    1
+    >>> D = result[0]
+    >>> D.size
+    4
+    >>> D[0, 0]
+    1.0
+    >>> (D[0, 1:0] == 6).all()
+    True
+    """
+    result = list()
+    for (l, theta_l) in enumerate(Theta):
+        lambda_l = theta_l * 0 + lamb
+        lambda_l[:, 0] = 0
+        D_l = 1 / m * Delta[l] + np.multiply(lambda_l, theta_l)
+        result.append(D_l)
+    return result
+
 
 if __name__ == '__main__':
     doctest.testmod()
