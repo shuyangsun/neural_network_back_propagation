@@ -250,6 +250,34 @@ def nn_D(m, Delta, Theta, lamb):
         result.append(D_l)
     return result
 
+def nn_grad_check(h_theta_x, y, D, Theta, lamb=0, EPSILON=0.1):
+    Theta_plus = Theta.copy()
+    Theta_minus = Theta.copy()
+    for l in len(Theta):
+        for i in np.size(Theta[l], axis=0):
+            for j in np.size(Theta[l], axis=1):
+                theta_l_i_j_original = Theta[l][i, j]
+                Theta_plus[l][i, j] += EPSILON
+                Theta_minus[l][i, j] -= EPSILON
+                J_Theta_plus = nn_J_Theta(h_theta_x, y, lamb, Theta_plus)
+                J_Theta_minus = nn_J_Theta(h_theta_x, y, lamb, Theta_minus)
+                grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
+                if grad_approx is not D[l][i, j]:
+                    return False
+                else:
+                    Theta_plus[l][i, j] = theta_l_i_j_original
+                    Theta_minus[l][i, j] = theta_l_i_j_original
+    return True
+
+
+def nn_grad_approx(h_theta_x, y, lamb=0, Theta=None, l=0, i=0, j=0, EPSILON=0.1):
+    Theta_plus = Theta.copy()
+    Theta_minus = Theta.copy()
+    Theta_plus[l][i, j] += EPSILON
+    Theta_minus[l][i, j] -= EPSILON
+    J_Theta_plus = nn_J_Theta(h_theta_x, y, lamb, Theta_plus)
+    J_Theta_minus = nn_J_Theta(h_theta_x, y, lamb, Theta_minus)
+    return (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
 
 if __name__ == '__main__':
     doctest.testmod()
