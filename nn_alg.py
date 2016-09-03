@@ -5,10 +5,10 @@ import neural_network_back_propagation.util as util
 
 def nn_forward_prop(x_i, Theta):
     """
-    Get the all the values in the layer based on input values and Theta, using forward propagation algorithm.
-    :param x_i: Input layer values.
-    :param Theta: Three dimensional array containing all the Theta values.
-    :return: Three dimensional list containing all values in the neural network.
+    Get the all the values in the layer based on X and θ, using forward propagation algorithm.
+    :param x_i: Input layer values X.
+    :param Theta: Three dimensional list of θ.
+    :return: Three dimensional list containing all neurons in the neural network.
     >>> x = np.matrix('1 2 3')
     >>> Theta = [np.matrix('1 1 1 1')]
     >>> result = nn_forward_prop(x, Theta)
@@ -58,13 +58,13 @@ def nn_forward_prop(x_i, Theta):
 
 def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     """
-    Calculate the cost based on given hypothesis, output value, regularization parameter lambda and Theta.
+    Calculate the cost based on given hypothesis hθ(x), output value y, regularization parameter λ and θ.
     :param h_theta_x: Hypothesis matrix (probabilities),\
-    should be a two dimensional matrix if number of class is greater than 2.
+    should be a two dimensional matrix if number of class K is greater than 2.
     :param y: Output values (1 or 0), shape should match hypothesis.
-    :param lamb: Regularization parameter.
-    :param Theta: List of weights for regularization.
-    :return: The cost of current hypothesis.
+    :param lamb: Regularization parameter λ.
+    :param Theta: Three dimensional list of θ for regularization.
+    :return: The cost of current hypothesis J(θ).
     >>> import math
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
@@ -169,7 +169,7 @@ def nn_delta(neurons, Theta, y):
 
 def nn_Delta(Delta, delta, neurons):
     """
-    Compute Delta for further computing of derivative of J(Theta) - D.
+    Compute Delta for further computing of D (derivative of J(θ)).
     :param Delta: Original Delta from last iteration.
     :param delta: Error rates computed with back propagation algorithm.
     :param neurons: Two dimensional list of neurons, including bias units.
@@ -221,12 +221,12 @@ def nn_Delta(Delta, delta, neurons):
 
 def nn_D(m, Delta, Theta, lamb):
     """
-    Calculates D (derivative of cost function) for J(Theta).
+    Calculates D (derivative of cost function) for J(θ).
     :param m: Number of training samples.
     :param Delta: Three dimensional list of Delta computed using back propagation algorithm.
     :param Theta: Three dimensional list of weights.
     :param lamb: Regularization parameter lambda.
-    :return: Three dimensional list of derivative of J(Theta).
+    :return: Three dimensional list of derivative of J(θ).
     >>> m = 5
     >>> Delta = [np.matrix('5 5 5 5')]
     >>> Theta = [np.matrix('1 1 1 1')]
@@ -241,6 +241,27 @@ def nn_D(m, Delta, Theta, lamb):
     1.0
     >>> (D[0, 1:0] == 6).all()
     True
+    >>> m = 5
+    >>> Delta = [np.matrix('5 5 5 5'), np.matrix('5 5 5 5 5 5')]
+    >>> Theta = [np.matrix('1 1 1 1'), np.matrix('1 1 1 1 1 1')]
+    >>> lamb = 99
+    >>> result = nn_D(m, Delta, Theta, lamb)
+    >>> len(result)
+    2
+    >>> D_1 = result[0]
+    >>> D_1.size
+    4
+    >>> D_2 = result[1]
+    >>> D_2.size
+    6
+    >>> D_1[0, 0]
+    1.0
+    >>> D_2[0, 0]
+    1.0
+    >>> (D_1[0, 1:0] == 100).all()
+    True
+    >>> (D_2[0, 1:0] == 100).all()
+    True
     """
     result = list()
     for (l, theta_l) in enumerate(Theta):
@@ -250,7 +271,18 @@ def nn_D(m, Delta, Theta, lamb):
         result.append(D_l)
     return result
 
+
 def nn_grad_check(h_theta_x, y, D, Theta, lamb=0, EPSILON=0.1):
+    """
+    Check if the gradient approximation is the same as D (derivative of J(θ)).
+    :param h_theta_x: Hypothesis.
+    :param y: Outputs.
+    :param D: Derivative of J(θ).
+    :param Theta: Three dimensional list of θ.
+    :param lamb: Regularization parameter λ.
+    :param EPSILON: Left and right side ε value for gradient checking.
+    :return: True if gradient check passes, false otherwise.
+    """
     Theta_plus = Theta.copy()
     Theta_minus = Theta.copy()
     for l in len(Theta):
