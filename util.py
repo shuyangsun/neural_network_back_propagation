@@ -1,5 +1,6 @@
 import doctest
 import numpy as np
+import math
 
 
 def add_ones(matrix, is_vector_column=False):
@@ -115,6 +116,7 @@ def zero_Delta(num_features, num_classes, *num_layer_units):
     """
     return rand_Theta(num_features, num_classes, *num_layer_units, EPSILON=0)
 
+
 def change_range(Theta, EPSILON=1):
     """
     Make thetas be inside range [-EPSILON, EPSILON], assuming original values are inside range [0, 1].
@@ -139,6 +141,30 @@ def change_range(Theta, EPSILON=1):
     """
     return Theta * 2 * EPSILON - EPSILON
 
+
+def sigmoid(z):
+    """
+    Calculate sigmoid function (1/(1 + e^(-z))) output with given z value.
+    :param z: Z in sigmoid function.
+    :return: Sigmoid function output.
+    >>> z = 0
+    >>> result = sigmoid(z)
+    >>> result
+    0.5
+    >>> z = 10
+    >>> result = sigmoid(z)
+    >>> result > 0.5
+    True
+    >>> result < 1
+    True
+    >>> z = -10
+    >>> result = sigmoid(z)
+    >>> result < 0.5
+    True
+    >>> result > 0
+    True
+    """
+    return np.divide(1, (1 + np.power(math.e, -z)))
 
 if __name__ == '__main__':
     doctest.testmod()

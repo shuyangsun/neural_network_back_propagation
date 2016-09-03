@@ -20,8 +20,8 @@ def nn_forward_prop(x_i, Theta):
     4
     >>> result[1].size
     1
-    >>> np.sum(result[-1])
-    7
+    >>> np.sum(result[-1]) > 0.5
+    True
     >>> x = np.matrix('1 2 3')
     >>> Theta = [np.matrix('1 1 1 1; 0 0 0 0; 2 2 2 2'), np.matrix('1 2 0 1; 1 0 0 0'), np.matrix('1 1 1')]
     >>> result = nn_forward_prop(x, Theta)
@@ -35,8 +35,6 @@ def nn_forward_prop(x_i, Theta):
     3
     >>> result[3].size
     1
-    >>> np.sum(result[-1])
-    31
     >>> num_features = 400
     >>> num_classes = 10
     >>> x = np.matrix(np.random.rand(num_features))
@@ -52,7 +50,7 @@ def nn_forward_prop(x_i, Theta):
         a_l = (theta_l @ a_l.T).T
         if i < len(Theta) - 1:
             a_l = util.add_ones(a_l)
-        result.append(a_l)
+        result.append(util.sigmoid(a_l))
     return result
 
 
@@ -302,16 +300,20 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     :param lamb: Regularization parameter λ.
     :param EPSILON: Left and right side ε value for gradient checking.
     :return: True if gradient check passes, false otherwise.
-    >>> X = np.matrix('1 2 3 5; 2 32 6 7; 5 2 11 -9')
+    >>> X = np.matrix('1 2 3 5; 2 3 6 7; 5 2 11 -9')
     >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
-    >>> Theta = util.rand_Theta(4, 3, 10, 10)
+    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON=2)
     >>> lamb = 10
+    >>> D = util.zero_Delta(4, 3, 10, 10)
+    >>> result = nn_grad_check(X, y, D, Theta, lamb)
+    >>> result
+    False
     """
     Theta_plus = Theta.copy()
     Theta_minus = Theta.copy()
-    for l in len(Theta):
-        for i in np.size(Theta[l], axis=0):
-            for j in np.size(Theta[l], axis=1):
+    for l in range(len(Theta)):
+        for i in range(np.size(Theta[l], axis=0)):
+            for j in range(np.size(Theta[l], axis=1)):
                 theta_l_i_j_original = Theta[l][i, j]
                 Theta_plus[l][i, j] += EPSILON
                 Theta_minus[l][i, j] -= EPSILON
