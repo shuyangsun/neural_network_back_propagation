@@ -272,16 +272,40 @@ def nn_D(m, Delta, Theta, lamb):
     return result
 
 
-def nn_grad_check(h_theta_x, y, D, Theta, lamb=0, EPSILON=0.1):
+def nn_update_Theta_with_D(Theta, D):
+    """
+    Update θ using calculated derivative of θ.
+    :param Theta: Three dimensional list of θ.
+    :param D: Three dimensional list of derivative of θ.
+    :return: Updated θ.
+    >>> Theta = [np.matrix('1 2 3 4 5')]
+    >>> D = [np.matrix('0 1 2 3 4')]
+    >>> result = nn_update_Theta_with_D(Theta, D)
+    >>> len(result)
+    1
+    >>> (result[0] == 1).all()
+    True
+    """
+    result = list()
+    for (l, theta_l) in enumerate(Theta):
+        result.append(theta_l - D[l])
+    return result
+
+
+def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     """
     Check if the gradient approximation is the same as D (derivative of J(θ)).
-    :param h_theta_x: Hypothesis.
+    :param X: Training set inputs.
     :param y: Outputs.
     :param D: Derivative of J(θ).
     :param Theta: Three dimensional list of θ.
     :param lamb: Regularization parameter λ.
     :param EPSILON: Left and right side ε value for gradient checking.
     :return: True if gradient check passes, false otherwise.
+    >>> X = np.matrix('1 2 3 5; 2 32 6 7; 5 2 11 -9')
+    >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
+    >>> Theta = util.rand_Theta(4, 3, 10, 10)
+    >>> lamb = 10
     """
     Theta_plus = Theta.copy()
     Theta_minus = Theta.copy()
@@ -291,8 +315,10 @@ def nn_grad_check(h_theta_x, y, D, Theta, lamb=0, EPSILON=0.1):
                 theta_l_i_j_original = Theta[l][i, j]
                 Theta_plus[l][i, j] += EPSILON
                 Theta_minus[l][i, j] -= EPSILON
-                J_Theta_plus = nn_J_Theta(h_theta_x, y, lamb, Theta_plus)
-                J_Theta_minus = nn_J_Theta(h_theta_x, y, lamb, Theta_minus)
+                h_theta_x_plus = nn_forward_prop(X, Theta_plus)[-1]
+                h_theta_x_minus = nn_forward_prop(X, Theta_minus)[-1]
+                J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
+                J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
                 if grad_approx is not D[l][i, j]:
                     return False
