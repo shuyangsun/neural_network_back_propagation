@@ -27,7 +27,10 @@ def add_ones(matrix, is_vector_column=False):
     >>> (B == np.matrix('1 0 0 0').T).all()
     True
     """
-    return np.insert(matrix, 0, np.array(1), axis=0 if is_vector_column else 1)
+    if matrix.ndim <= 1:
+        return np.insert(matrix, 0, np.array(1))
+    else:
+        return np.insert(matrix, 0, np.array(1), axis=(0 if is_vector_column else 1))
 
 
 def rand_Theta(num_features, num_classes, *S, EPSILON=1):
@@ -184,6 +187,7 @@ class DataProcessor:
     def get_unique_categories(output, case_sensitive=True):
         if not case_sensitive:
             output = [x.lower() if isinstance(x, str) else x for x in output]
+        output = output.flatten('F')
         return np.unique(output)
 
     @staticmethod
@@ -192,11 +196,13 @@ class DataProcessor:
 
         if np.size(unique_cat) <= 2:
             outputs_b = np.zeros(np.size(output)).T
-            mask = (output == unique_cat[0])
+            mask = (output == unique_cat[0]).flatten('F')
             outputs_b[mask] = 1
         else:
             outputs_b = np.zeros((np.size(output), np.size(unique_cat)))
-            mask = output == unique_cat
+            mask = np.repeat(np.matrix(unique_cat), np.size(outputs_b, axis=0), axis=0)
+            output_2d = np.repeat(np.matrix(output).T, np.size(unique_cat), axis=1)
+            mask = mask == output_2d
             outputs_b[mask] = 1
 
         return unique_cat, outputs_b
@@ -219,7 +225,7 @@ class FeatureNormalizer:
         else:
             avg = self.__avg
             std = self.__std
-        return (data - avg) / std
+        return np.nan_to_num((data - avg) / std)
 
     def __calculate_scalars(self):
         if self.__data_has_x0_column:
@@ -230,6 +236,8 @@ class FeatureNormalizer:
             self.__std = np.std(self.__data, axis=0)
         if self.__std is 0:
             self.__std = np.max(self.__data, axis=0) - np.min(self.__data, axis=0)
+            if self.__std == 0:
+                self.__std = 1
 
 if __name__ == '__main__':
     doctest.testmod()

@@ -173,7 +173,7 @@ def nn_Delta(Delta, delta, neurons):
     :param neurons: Two dimensional list of neurons, including bias units.
     :return: List of Delta, shape should match Theta.
     >>> Delta = util.zero_Delta(10, 5, 10, 10)
-    >>> delta = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
+    >>> delta = [np.matrix(np.ones(10)), np.matrix(np.ones(10)), np.matrix(np.ones(5))]
     >>> neurons = [np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(11)), np.matrix(np.ones(5))]
     >>> result = nn_Delta(Delta, delta, neurons)
     >>> len(result)
@@ -196,7 +196,7 @@ def nn_Delta(Delta, delta, neurons):
     True
     True
     >>> Delta = util.zero_Delta(5, 2)
-    >>> delta = [np.matrix(np.ones(5)), np.matrix(np.ones(1))]
+    >>> delta = [np.matrix(np.ones(1))]
     >>> neurons = [np.matrix(np.ones(6)), np.matrix(np.ones(1))]
     >>> result = nn_Delta(Delta, delta, neurons)
     >>> len(result)
@@ -212,7 +212,7 @@ def nn_Delta(Delta, delta, neurons):
     result = list()
     for (l, ele) in enumerate(Delta):
         a_l = neurons[l]
-        Delta_l = Delta[l] + (a_l.T @ delta[l + 1]).T
+        Delta_l = Delta[l] + (a_l.T @ delta[l]).T
         result.append(Delta_l)
     return result
 
@@ -270,15 +270,16 @@ def nn_D(m, Delta, Theta, lamb):
     return result
 
 
-def nn_update_Theta_with_D(Theta, D):
+def nn_update_Theta_with_D(Theta, D, alpha=0.01):
     """
     Update θ using calculated derivative of θ.
     :param Theta: Three dimensional list of θ.
     :param D: Three dimensional list of derivative of θ.
+    :param alpha: Learning rate.
     :return: Updated θ.
     >>> Theta = [np.matrix('1 2 3 4 5')]
     >>> D = [np.matrix('0 1 2 3 4')]
-    >>> result = nn_update_Theta_with_D(Theta, D)
+    >>> result = nn_update_Theta_with_D(Theta, D, alpha=1)
     >>> len(result)
     1
     >>> (result[0] == 1).all()
@@ -286,7 +287,7 @@ def nn_update_Theta_with_D(Theta, D):
     """
     result = list()
     for (l, theta_l) in enumerate(Theta):
-        result.append(theta_l - D[l])
+        result.append(theta_l - alpha * D[l])
     return result
 
 
@@ -322,12 +323,13 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
                 J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
-                if grad_approx is not D[l][i, j]:
+                derivative_l_i_j = D[l][i, j]
+                if grad_approx is not derivative_l_i_j:
                     return False
                 else:
                     Theta_plus[l][i, j] = theta_l_i_j_original
                     Theta_minus[l][i, j] = theta_l_i_j_original
-    return True,
+    return True
 
 if __name__ == '__main__':
     doctest.testmod()
