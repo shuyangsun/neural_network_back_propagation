@@ -10,9 +10,10 @@ np.random.shuffle(augmented_matrix)
 X = augmented_matrix[:, :-1]
 y = augmented_matrix[:, -1]
 test_ratio = 0.98
-alpha = 0.001
+alpha = 0.000003
 lamb = 10
-trainer = nn.NeuralNetwork(X, y, test_ratio, alpha, lamb, 400)
-trainer.train(iter_limit=0, time_limit=60, grad_check=True)
+EPSILON_INIT = 0
+trainer = nn.NeuralNetwork(X, y, test_ratio, alpha, lamb, EPSILON_INIT, 400)
+trainer.train(iter_limit=0, time_limit=600, grad_check=True)
 print(trainer.predict(np.matrix(X[-10:-1])))
 print(y[-10:-1])

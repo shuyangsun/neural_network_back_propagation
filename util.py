@@ -33,10 +33,10 @@ def add_ones(matrix, is_vector_column=False):
         return np.insert(matrix, 0, np.array(1), axis=(0 if is_vector_column else 1))
 
 
-def rand_Theta(num_features, num_classes, *S, EPSILON=1):
+def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=1):
     """
     This function generates a random set of Thetas for neural network calculation.
-    :param EPSILON: The EPSILON value used for range (-EPSILON < theta < EPSILON).
+    :param EPSILON_INIT: The EPSILON value used for range (-EPSILON < theta < EPSILON).
     :param num_features: Number of input features (without bias unit).
     :param S: An array containing the number of units in each hidden layer (without bias unit).
     :param num_classes: Number of classification classes.
@@ -53,7 +53,7 @@ def rand_Theta(num_features, num_classes, *S, EPSILON=1):
     1
     >>> np.size(Theta[1], axis=1)
     4
-    >>> Theta = rand_Theta(400, 10, 600, 600, 600, EPSILON=2)
+    >>> Theta = rand_Theta(400, 10, 600, 600, 600, EPSILON_INIT=2)
     >>> len(Theta)
     4
     >>> np.size(Theta[0], axis=0)
@@ -73,6 +73,7 @@ def rand_Theta(num_features, num_classes, *S, EPSILON=1):
     >>> np.size(Theta[3], axis=1)
     601
     """
+    optimize_eps = EPSILON_INIT is 0
     if num_classes <= 2:
         num_classes = 1
 
@@ -80,16 +81,23 @@ def rand_Theta(num_features, num_classes, *S, EPSILON=1):
     S = np.array(S)
     S = S.flatten()
     result = list()
-    theta_cur = np.matrix(np.random.rand(S[0] if len(S) else num_classes, num_features + 1))
-    theta_cur = change_range(theta_cur, EPSILON)
+    S_l = num_features + 1
+    S_l1 = S[0] if len(S) else num_classes
+    theta_cur = np.matrix(np.random.rand(S_l1, S_l))
+    if optimize_eps:
+        EPSILON_INIT = optimize_EPSILON_INIT(S_l, S_l1)
+    theta_cur = change_range(theta_cur, EPSILON_INIT)
     result.append(theta_cur)
-    for i, num_unit_current_layer in enumerate(S):
+    for i, S_l in enumerate(S):
+        S_l += 1
         if i < len(S) - 1:
-            num_unit_next_layer = S[i + 1]
+            S_l1 = S[i + 1]
         else:
-            num_unit_next_layer = num_classes
-        theta_cur = np.matrix(np.random.rand(num_unit_next_layer, num_unit_current_layer + 1))
-        theta_cur = change_range(theta_cur, EPSILON)
+            S_l1 = num_classes
+        theta_cur = np.matrix(np.random.rand(S_l1, S_l))
+        if optimize_eps:
+            EPSILON_INIT = optimize_EPSILON_INIT(S_l, S_l1)
+        theta_cur = change_range(theta_cur, EPSILON_INIT)
         result.append(theta_cur)
     return result
 
@@ -117,7 +125,20 @@ def zero_Delta(num_features, num_classes, *S):
     True
     True
     """
-    return rand_Theta(num_features, num_classes, *S, EPSILON=0)
+    result = rand_Theta(num_features, num_classes, *S)
+    for l in range(len(result)):
+        result[l] *= 0
+    return result
+
+
+def optimize_EPSILON_INIT(L_in, L_out):
+    """
+    Calculates the most optimized EPSILON for initializing random θ.
+    :param L_in: S_l.
+    :param L_out: S_(l + 1)
+    :return: Optimized EPSILON based on layer unit counts.
+    """
+    return math.sqrt(6)/(math.sqrt(L_in + L_out))
 
 
 def change_range(Theta, EPSILON=1):
@@ -234,10 +255,16 @@ class FeatureNormalizer:
         else:
             self.__avg = np.average(self.__data, axis=0)
             self.__std = np.std(self.__data, axis=0)
-        if self.__std is 0:
-            self.__std = np.max(self.__data, axis=0) - np.min(self.__data, axis=0)
-            if self.__std == 0:
-                self.__std = 1
+        mask = self.__std == 0
+        self.__std[mask] = 1
+
+
+def copy_list_of_ndarray(lst):
+    result = []
+    for ele in lst:
+        result.append(np.copy(ele))
+    return result
+
 
 if __name__ == '__main__':
     doctest.testmod()

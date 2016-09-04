@@ -1,12 +1,13 @@
 import doctest
 import numpy as np
 import neural_network_back_propagation.util as util
+import math
 
 
-def nn_forward_prop(x_i, Theta):
+def nn_forward_prop(X, Theta):
     """
     Get the all the values in the layer based on X and θ, using forward propagation algorithm.
-    :param x_i: Input layer values X.
+    :param X: Input layer values X.
     :param Theta: Three dimensional list of θ.
     :return: Three dimensional list containing all neurons in the neural network.
     >>> x = np.matrix('1 2 3')
@@ -38,12 +39,12 @@ def nn_forward_prop(x_i, Theta):
     >>> num_features = 400
     >>> num_classes = 10
     >>> x = np.matrix(np.random.rand(num_features))
-    >>> Theta = util.rand_Theta(num_features, num_classes, 600, 600, 600, EPSILON=5)
+    >>> Theta = util.rand_Theta(num_features, num_classes, 600, 600, 600, EPSILON_INIT=5)
     >>> result = nn_forward_prop(x, Theta)
     >>> np.size(result[-1])
     10
     """
-    a_l = x_i
+    a_l = X
     a_l = util.add_ones(a_l)
     result = [a_l]
     for i, theta_l in enumerate(Theta):
@@ -96,9 +97,10 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
 
-def nn_delta(neurons, Theta, y):
+def nn_delta(delta, neurons, Theta, y):
     """
     Calculates errors using back propagation algorithm.
+    :param delta: Original delta.
     :param neurons: Two dimensional list of neurons, including bias units.
     :param Theta: Three dimensional list of Theta.
     :param y: Vector matrix of output units.
@@ -107,11 +109,12 @@ def nn_delta(neurons, Theta, y):
     >>> hidden_layer_counts = [20, 20, 20]
     >>> output_layer_count = 5
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
+    >>> delta = util.zero_Delta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(neurons, Theta, y)
+    >>> result = nn_delta(delta, neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -122,11 +125,12 @@ def nn_delta(neurons, Theta, y):
     >>> hidden_layer_counts = [400, 400]
     >>> output_layer_count = 400
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
+    >>> delta = util.zero_Delta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(neurons, Theta, y)
+    >>> result = nn_delta(delta, neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -137,11 +141,12 @@ def nn_delta(neurons, Theta, y):
     >>> hidden_layer_counts = []
     >>> output_layer_count = 2
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
+    >>> delta = util.zero_Delta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(neurons, Theta, y)
+    >>> result = nn_delta(delta, neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delta.size == layer_count for delta, layer_count in zip(result, hidden_layer_counts)])
@@ -152,6 +157,7 @@ def nn_delta(neurons, Theta, y):
     assert len(Theta) == len(neurons) - 1,\
         'Layers of neural neurons count ({0}) does not fit with layers of Theta count ({1}).'.format(len(neurons),
                                                                                                      len(Theta))
+    delta_rev = list(reversed(delta))
     neurons_rev = list(reversed(neurons))
     Theta_rev = list(reversed(Theta))
     result = [neurons_rev[0] - y]
@@ -161,7 +167,7 @@ def nn_delta(neurons, Theta, y):
             a_l = neurons_rev[l + 1]
             delta_cur_layer = np.multiply(delta_next_layer @ theta_l, np.multiply(a_l, (1 - a_l)))
             delta_cur_layer = np.delete(delta_cur_layer, 0, 1)
-            result.append(delta_cur_layer)
+            result.append(delta_rev[l] + delta_cur_layer)
     return list(reversed(result))
 
 
@@ -265,7 +271,7 @@ def nn_D(m, Delta, Theta, lamb):
     for (l, theta_l) in enumerate(Theta):
         lambda_l = theta_l * 0 + lamb
         lambda_l[:, 0] = 0
-        D_l = 1 / m * Delta[l] + np.multiply(lambda_l, theta_l)
+        D_l = 1 / m * (Delta[l] + np.multiply(lambda_l, theta_l))
         result.append(D_l)
     return result
 
@@ -303,32 +309,30 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     :return: True if gradient check passes, false otherwise.
     >>> X = np.matrix('1 2 3 5; 2 3 6 7; 5 2 11 -9')
     >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
-    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON=2)
+    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON_INIT=2)
     >>> lamb = 10
     >>> D = util.zero_Delta(4, 3, 10, 10)
     >>> result = nn_grad_check(X, y, D, Theta, lamb)
     >>> result
     False
     """
-    Theta_plus = Theta.copy()
-    Theta_minus = Theta.copy()
     for l in range(len(Theta)):
         for i in range(np.size(Theta[l], axis=0)):
             for j in range(np.size(Theta[l], axis=1)):
-                theta_l_i_j_original = Theta[l][i, j]
-                Theta_plus[l][i, j] += EPSILON
-                Theta_minus[l][i, j] -= EPSILON
+                Theta_plus = util.copy_list_of_ndarray(Theta)
+                Theta_minus = util.copy_list_of_ndarray(Theta)
+                perturb = np.matrix(np.zeros((np.size(Theta[l], axis=0), np.size(Theta[l], axis=1))))
+                perturb[i, j] = EPSILON
+                Theta_plus[l] += perturb
+                Theta_minus[l] -= perturb
                 h_theta_x_plus = nn_forward_prop(X, Theta_plus)[-1]
                 h_theta_x_minus = nn_forward_prop(X, Theta_minus)[-1]
                 J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
                 derivative_l_i_j = D[l][i, j]
-                if grad_approx is not derivative_l_i_j:
+                if math.fabs(grad_approx - derivative_l_i_j) > 10 ** (-9):
                     return False
-                else:
-                    Theta_plus[l][i, j] = theta_l_i_j_original
-                    Theta_minus[l][i, j] = theta_l_i_j_original
     return True
 
 if __name__ == '__main__':

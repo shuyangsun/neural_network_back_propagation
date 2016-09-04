@@ -6,7 +6,7 @@ import time
 
 
 class NeuralNetwork:
-    def __init__(self, X, y, test_ratio=0.1, alpha=0.01, lamb=0, *S):
+    def __init__(self, X, y, test_ratio=0.1, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
         n = np.size(X, axis=1)
         training_count = math.floor(np.size(X, axis=0) * (1 - test_ratio))
         self.__X, self.__X_test = util.DataProcessor.partition(X, training_count)
@@ -16,7 +16,8 @@ class NeuralNetwork:
         K = np.size(self.__unique_cat)
         self.__lamb = lamb
         self.__alpha = alpha
-        self.__Theta = util.rand_Theta(n, K, *S)
+        self.__EPSILON_INIT = EPSILON_INIT
+        self.__Theta = util.rand_Theta(n, K, *S, EPSILON_INIT=EPSILON_INIT)
         self.__Delta = util.zero_Delta(n, K, *S)
         self.__feature_normalizer = util.FeatureNormalizer(self.__X)
         self.__X = self.__feature_normalizer.normalized_feature()
@@ -30,7 +31,7 @@ class NeuralNetwork:
         check_iter_limit = iter_limit is not 0
         i = 0
         while (check_iter_limit and i < iter_limit) or not check_iter_limit:
-            if (i + 1) % 10 == 0:
+            if (i + 1) % 10 is 0:
                 time_elapsed = time.time() - start
                 print('Iteration {0}, time passed {1}s...'.format(i + 1, np.round(time_elapsed, 2)))
                 if time_limit is not 0 and time_elapsed > time_limit:
@@ -42,15 +43,15 @@ class NeuralNetwork:
                 self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
                 self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
                 self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
-                if grad_check and i is 0:
-                    grad_check_result = alg.nn_grad_check(self.__X,
-                                                          self.__y,
-                                                          self.__D,
-                                                          self.__Theta,
-                                                          lamb=self.__lamb,
-                                                          EPSILON=0.0001)
-                    if not grad_check_result:
-                        raise Exception('Gradient check did not pass.')
+            if grad_check and i is 0:
+                grad_check_result = alg.nn_grad_check(self.__X,
+                                                      self.__y,
+                                                      self.__D,
+                                                      self.__Theta,
+                                                      lamb=self.__lamb,
+                                                      EPSILON=10 ** -4)
+                if not grad_check_result:
+                    raise Exception('Gradient check did not pass.')
             i += 1
         print('Finished training, time used: {0}s.'.format(time.time() - start))
         print('Calculating error rate with test samples...')
