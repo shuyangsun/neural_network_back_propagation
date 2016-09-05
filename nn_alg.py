@@ -97,7 +97,7 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
 
-def nn_delta(delta, neurons, Theta, y):
+def nn_delta(neurons, Theta, y):
     """
     Calculates errors using back propagation algorithm.
     :param delta: Original delta.
@@ -109,12 +109,11 @@ def nn_delta(delta, neurons, Theta, y):
     >>> hidden_layer_counts = [20, 20, 20]
     >>> output_layer_count = 5
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
-    >>> delta = util.zero_Delta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(delta, neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -130,7 +129,7 @@ def nn_delta(delta, neurons, Theta, y):
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(delta, neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delt.size == layer_count for delt, layer_count in zip(result, hidden_layer_counts)])
@@ -141,12 +140,11 @@ def nn_delta(delta, neurons, Theta, y):
     >>> hidden_layer_counts = []
     >>> output_layer_count = 2
     >>> x_i = np.matrix(np.random.rand(input_layer_count))
-    >>> delta = util.zero_Delta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> Theta = util.rand_Theta(input_layer_count, output_layer_count, hidden_layer_counts)
     >>> neurons = nn_forward_prop(x_i, Theta)
     >>> y = np.matrix(np.zeros(output_layer_count))
     >>> y[0] = 1
-    >>> result = nn_delta(delta, neurons, Theta, y)
+    >>> result = nn_delta(neurons, Theta, y)
     >>> len(result) == len(hidden_layer_counts) + 1
     True
     >>> all([delta.size == layer_count for delta, layer_count in zip(result, hidden_layer_counts)])
@@ -157,7 +155,6 @@ def nn_delta(delta, neurons, Theta, y):
     assert len(Theta) == len(neurons) - 1,\
         'Layers of neural neurons count ({0}) does not fit with layers of Theta count ({1}).'.format(len(neurons),
                                                                                                      len(Theta))
-    delta_rev = list(reversed(delta))
     neurons_rev = list(reversed(neurons))
     Theta_rev = list(reversed(Theta))
     result = [neurons_rev[0] - y]
@@ -167,7 +164,7 @@ def nn_delta(delta, neurons, Theta, y):
             a_l = neurons_rev[l + 1]
             delta_cur_layer = np.multiply(delta_next_layer @ theta_l, np.multiply(a_l, (1 - a_l)))
             delta_cur_layer = np.delete(delta_cur_layer, 0, 1)
-            result.append(delta_rev[l] + delta_cur_layer)
+            result.append(delta_cur_layer)
     return list(reversed(result))
 
 
@@ -331,7 +328,7 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
                 derivative_l_i_j = D[l][i, j]
-                if math.fabs(grad_approx - derivative_l_i_j) > 10 ** (-9):
+                if grad_approx is not math.nan and math.fabs(grad_approx - derivative_l_i_j) > 10 ** (-9):
                     return False
     return True
 

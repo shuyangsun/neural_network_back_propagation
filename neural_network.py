@@ -30,19 +30,23 @@ class NeuralNetwork:
         start = time.time()
         check_iter_limit = iter_limit is not 0
         i = 0
+
+        # Print iteration information and check iteration count or time limit.
         while (check_iter_limit and i < iter_limit) or not check_iter_limit:
             if (i + 1) % 10 is 0:
                 time_elapsed = time.time() - start
                 print('Iteration {0}, time passed {1}s...'.format(i + 1, np.round(time_elapsed, 2)))
                 if time_limit is not 0 and time_elapsed > time_limit:
                     break
-            for l in range(np.size(self.__X, axis=0)):
-                x_i = np.matrix(self.__X[l])
-                self.__neurons = alg.nn_forward_prop(x_i, self.__Theta)
-                self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y[l]))
-                self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
-                self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
-                self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
+
+            # Calculate delta, Delta and D. Then update Theta:
+            self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
+            self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y[l]))
+            self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
+            self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
+            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
+
+            # Do gradient check on the first iteration if turned on.
             if grad_check and i is 0:
                 grad_check_result = alg.nn_grad_check(self.__X,
                                                       self.__y,
