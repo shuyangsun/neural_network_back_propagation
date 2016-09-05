@@ -1,6 +1,6 @@
 import doctest
 import numpy as np
-import neural_network_back_propagation.util as util
+import util
 import math
 
 
@@ -86,8 +86,10 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     True
     """
     m = np.size(h_theta_x, axis=0)
-    cost_y_is_0 = np.multiply((1 - y), np.log(1 - h_theta_x))
-    cost_y_is_1 = np.multiply(y, np.log(h_theta_x))
+    diff_y_is_0 = np.nan_to_num(np.log(1 - h_theta_x))
+    diff_y_is_1 = np.nan_to_num(np.log(h_theta_x))
+    cost_y_is_0 = np.nan_to_num(np.multiply((1 - y), diff_y_is_0))
+    cost_y_is_1 = np.nan_to_num(np.multiply(y, diff_y_is_1))
     cost_wo_regularization = - np.sum(cost_y_is_0 + cost_y_is_1) / m
     if Theta is None or len(Theta) == 0:
         theta_squared_sum = 0
@@ -213,9 +215,13 @@ def nn_Delta(Delta, delta, neurons):
     True
     """
     result = list()
-    for (l, ele) in enumerate(Delta):
-        a_l = neurons[l]
-        Delta_l = Delta[l] + (a_l.T @ delta[l]).T
+    for (l, Delta_l) in enumerate(Delta):
+        Delta_l = np.copy(Delta_l)
+        for (m, Delta_l_m) in enumerate(Delta_l):
+            a_l_m = np.matrix(neurons[l][m])
+            # delta ^ (l) here is actually delta ^ (l + 1), because there's no delta ^ (1) on input layer.
+            Delta_l_m = Delta_l_m + delta[l][m].T @ a_l_m
+            Delta_l[m] = Delta_l_m
         result.append(Delta_l)
     return result
 
@@ -264,11 +270,14 @@ def nn_D(m, Delta, Theta, lamb):
     >>> (D_2[0, 1:0] == 100).all()
     True
     """
+    Delta_sum = list()
+    for Delta_l in Delta:
+        Delta_sum.append(np.sum(Delta_l, axis=0))
     result = list()
     for (l, theta_l) in enumerate(Theta):
         lambda_l = theta_l * 0 + lamb
         lambda_l[:, 0] = 0
-        D_l = 1 / m * (Delta[l] + np.multiply(lambda_l, theta_l))
+        D_l = 1 / m * (Delta_sum[l] + np.multiply(lambda_l, theta_l))
         result.append(D_l)
     return result
 

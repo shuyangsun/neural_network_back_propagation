@@ -33,7 +33,7 @@ def add_ones(matrix, is_vector_column=False):
         return np.insert(matrix, 0, np.array(1), axis=(0 if is_vector_column else 1))
 
 
-def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=1):
+def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=0):
     """
     This function generates a random set of Thetas for neural network calculation.
     :param EPSILON_INIT: The EPSILON value used for range (-EPSILON < theta < EPSILON).
@@ -73,27 +73,10 @@ def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=1):
     >>> np.size(Theta[3], axis=1)
     601
     """
-    optimize_eps = EPSILON_INIT is 0
-    if num_classes <= 2:
-        num_classes = 1
-
-    # Convert num_layer_units to np array in case it's a generator.
-    S = np.array(S)
-    S = S.flatten()
     result = list()
-    S_l = num_features + 1
-    S_l1 = S[0] if len(S) else num_classes
-    theta_cur = np.matrix(np.random.rand(S_l1, S_l))
-    if optimize_eps:
-        EPSILON_INIT = optimize_EPSILON_INIT(S_l, S_l1)
-    theta_cur = change_range(theta_cur, EPSILON_INIT)
-    result.append(theta_cur)
-    for i, S_l in enumerate(S):
-        S_l += 1
-        if i < len(S) - 1:
-            S_l1 = S[i + 1]
-        else:
-            S_l1 = num_classes
+    optimize_eps = EPSILON_INIT is 0
+    shapes = Theta_shapes(num_features, num_classes, *S, m=0)
+    for S_l1, S_l in shapes:
         theta_cur = np.matrix(np.random.rand(S_l1, S_l))
         if optimize_eps:
             EPSILON_INIT = optimize_EPSILON_INIT(S_l, S_l1)
@@ -102,32 +85,60 @@ def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=1):
     return result
 
 
-def zero_Delta(num_features, num_classes, *S):
+def zero_Delta(num_features, num_classes, *S, m=1):
     """
     Generates a three dimensional list of Deltas with zero as their value, used for back propagation calculation.
     :param num_features: Number of features.
     :param num_classes: Number of classes.
     :param S: List of number of neurons (without bias units) in each layer.
+    :param m: Number of training samples.
     :return: Delta with zero values that matches Theta's dimension.
     >>> result = zero_Delta(3, 2, [3])
     >>> len(result)
     2
     >>> np.size(result[0], axis=0)
-    3
+    1
     >>> np.size(result[0], axis=1)
+    3
+    >>> np.size(result[0], axis=2)
     4
     >>> np.size(result[1], axis=0)
     1
     >>> np.size(result[1], axis=1)
+    1
+    >>> np.size(result[1], axis=2)
     4
     >>> for ele in result:
     ...     (ele == 0).all()
     True
     True
     """
-    result = rand_Theta(num_features, num_classes, *S)
-    for l in range(len(result)):
-        result[l] *= 0
+    result = list()
+    shapes = Theta_shapes(num_features, num_classes, *S, m=m)
+    for m, S_l1, S_l in shapes:
+        result.append(np.zeros((m, S_l1, S_l)))
+    return result
+
+
+def Theta_shapes(num_features, num_classes, *S, m=0):
+    if num_classes <= 2:
+        num_classes = 1
+
+    # Convert num_layer_units to np array in case it's a generator.
+    S = np.array(S)
+    S = S.flatten()
+    result = list()
+
+    S_l = num_features + 1
+    S_l1 = S[0] if len(S) else num_classes
+    result.append((m, S_l1, S_l) if m else (S_l1, S_l))
+    for i, S_l in enumerate(S):
+        S_l += 1
+        if i < len(S) - 1:
+            S_l1 = S[i + 1]
+        else:
+            S_l1 = num_classes
+        result.append((m, S_l1, S_l) if m else (S_l1, S_l))
     return result
 
 

@@ -7,22 +7,23 @@ import time
 
 class NeuralNetwork:
     def __init__(self, X, y, test_ratio=0.1, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
-        n = np.size(X, axis=1)
+        self.__n = np.size(X, axis=1)
         training_count = math.floor(np.size(X, axis=0) * (1 - test_ratio))
         self.__X, self.__X_test = util.DataProcessor.partition(X, training_count)
         self.__y, self.__y_test = util.DataProcessor.partition(y, training_count)
         self.__m = np.size(self.__X, axis=0)
         self.__unique_cat, self.__y = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y)
-        K = np.size(self.__unique_cat)
+        self.__K = np.size(self.__unique_cat)
+        self.__S = S
         self.__lamb = lamb
         self.__alpha = alpha
         self.__EPSILON_INIT = EPSILON_INIT
-        self.__Theta = util.rand_Theta(n, K, *S, EPSILON_INIT=EPSILON_INIT)
-        self.__Delta = util.zero_Delta(n, K, *S)
+        self.__Theta = util.rand_Theta(self.__n, self.__K, self.__S, EPSILON_INIT=EPSILON_INIT)
         self.__feature_normalizer = util.FeatureNormalizer(self.__X)
         self.__X = self.__feature_normalizer.normalized_feature()
         self.__neurons = None
         self.__delta = None
+        self.__Delta = None
         self.__D = None
 
     def train(self, iter_limit=0, time_limit=0, grad_check=True):
@@ -39,9 +40,20 @@ class NeuralNetwork:
                 if time_limit is not 0 and time_elapsed > time_limit:
                     break
 
+            if (i + 1) is 2 or (i + 1) % 100 is 0:
+                print('-' * 50)
+                print('Iteration {0} cost is {1}.'.format(i + 1,
+                                                         alg.nn_J_Theta(self.__neurons[-1],
+                                                                        self.__y,
+                                                                        lamb=self.__lamb,
+                                                                        Theta=self.__Theta)))
+                self.__print_accuracy()
+                print('-' * 50)
+
             # Calculate delta, Delta and D. Then update Theta:
+            self.__Delta = util.zero_Delta(self.__n, self.__K, self.__S, m=self.__m)
             self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
-            self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y[l]))
+            self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
             self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
             self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
@@ -55,14 +67,13 @@ class NeuralNetwork:
                                                       lamb=self.__lamb,
                                                       EPSILON=10 ** -4)
                 if not grad_check_result:
-                    raise Exception('Gradient check did not pass.')
+                    print(Exception('Gradient check did not pass.'))
+                else:
+                    print('Passed gradient check.')
             i += 1
         print('Finished training, time used: {0}s.'.format(time.time() - start))
         print('Calculating error rate with test samples...')
-        predict_result = self.predict(self.__X_test)
-        correct_count = np.count_nonzero(predict_result == self.__y_test)
-        error_rate = 1 - (correct_count / np.size(self.__y_test, axis=0))
-        print('Error rate: {0:.2f}%.'.format(error_rate * 100))
+        self.__print_accuracy()
 
     def predict(self, X):
         input_normalized = self.__feature_normalizer.normalize_new_feature(X)
@@ -70,3 +81,8 @@ class NeuralNetwork:
         mask = np.argmax(result, axis=1)
         return self.__unique_cat[mask.T]
 
+    def __print_accuracy(self):
+        predict_result = self.predict(self.__X_test)
+        correct_count = np.count_nonzero(predict_result == self.__y_test)
+        error_rate = 1 - (correct_count / np.size(self.__y_test, axis=0))
+        print('Accuracy: {0:.2f}%.'.format((1 - error_rate) * 100))
