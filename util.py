@@ -75,7 +75,7 @@ def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=0):
     """
     result = list()
     optimize_eps = EPSILON_INIT is 0
-    shapes = Theta_shapes(num_features, num_classes, *S, m=0)
+    shapes = Theta_or_Delta_shapes(num_features, num_classes, *S, m=0)
     for S_l1, S_l in shapes:
         theta_cur = np.matrix(np.random.rand(S_l1, S_l))
         if optimize_eps:
@@ -114,13 +114,64 @@ def zero_Delta(num_features, num_classes, *S, m=1):
     True
     """
     result = list()
-    shapes = Theta_shapes(num_features, num_classes, *S, m=m)
+    shapes = Theta_or_Delta_shapes(num_features, num_classes, *S, m=m)
     for m, S_l1, S_l in shapes:
         result.append(np.zeros((m, S_l1, S_l)))
     return result
 
 
-def Theta_shapes(num_features, num_classes, *S, m=0):
+def Theta_or_Delta_shapes(num_features, num_classes, *S, m=0):
+    """
+    Return a list of shapes of Theta.
+    :param num_features: Number of features.
+    :param num_classes: Number of output classes.
+    :param S: List of number of units in hidden layers.
+    :param m: Number of training samples (for vectorized Delta only).
+    :return: The shape of Theta or Delta with given parameter.
+    >>> num_features = 10
+    >>> S = [10, 10]
+    >>> num_classes = 5
+    >>> m = 0
+    >>> result = Theta_or_Delta_shapes(num_features, num_classes, S, m=m)
+    >>> len(result)
+    3
+    >>> result[0][0]
+    10
+    >>> result[0][1]
+    11
+    >>> result[1][0]
+    10
+    >>> result[1][1]
+    11
+    >>> result[2][0]
+    5
+    >>> result[2][1]
+    11
+    >>> num_features = 200
+    >>> num_classes = 10
+    >>> m = 15
+    >>> result = Theta_or_Delta_shapes(num_features, num_classes, 200, 200, m=m)
+    >>> len(result)
+    3
+    >>> result[0][0]
+    15
+    >>> result[0][1]
+    200
+    >>> result[0][2]
+    201
+    >>> result[1][0]
+    15
+    >>> result[1][1]
+    200
+    >>> result[1][2]
+    201
+    >>> result[2][0]
+    15
+    >>> result[2][1]
+    10
+    >>> result[2][2]
+    201
+    """
     if num_classes <= 2:
         num_classes = 1
 

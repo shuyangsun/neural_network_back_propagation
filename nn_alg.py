@@ -72,14 +72,14 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     True
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
-    >>> Theta = [np.matrix('1 1 1')]
+    >>> Theta = [np.matrix('1 1 1 1')]
     >>> lamb = 2
     >>> cost = nn_J_Theta(h_theta_x, y, lamb, Theta)
     >>> cost == - math.log(0.5) * 4 + 1
     True
     >>> h_theta_x = np.matrix('0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5; 0.5 0.5 0.5 0.5')
     >>> y = np.matrix('0 1 0 0; 1 0 0 0; 0 0 0 1')
-    >>> Theta = [np.matrix('1 1 1'), np.matrix('1 1 1; 1 1 1; 1 1 1')]
+    >>> Theta = [np.matrix('1 1 1 1'), np.matrix('1 1 1 1; 1 1 1 1; 1 1 1 1')]
     >>> lamb = 4
     >>> cost = nn_J_Theta(h_theta_x, y, lamb, Theta)
     >>> cost == - math.log(0.5) * 4 + 8
@@ -184,19 +184,25 @@ def nn_Delta(Delta, delta, neurons):
     >>> len(result)
     3
     >>> np.size(result[0], axis=0)
-    10
+    1
     >>> np.size(result[0], axis=1)
+    10
+    >>> np.size(result[0], axis=2)
     11
     >>> np.size(result[1], axis=0)
-    10
+    1
     >>> np.size(result[1], axis=1)
+    10
+    >>> np.size(result[1], axis=2)
     11
     >>> np.size(result[2], axis=0)
-    5
+    1
     >>> np.size(result[2], axis=1)
+    5
+    >>> np.size(result[2], axis=2)
     11
     >>> for ele in result:
-    ...     (ele == 1).all()
+    ...     (ele[0] == 1).all()
     True
     True
     True
@@ -209,9 +215,11 @@ def nn_Delta(Delta, delta, neurons):
     >>> np.size(result[0], axis=0)
     1
     >>> np.size(result[0], axis=1)
+    1
+    >>> np.size(result[0], axis=2)
     6
     >>> for ele in result:
-    ...     (ele == 1).all()
+    ...     (ele[0] == 1).all()
     True
     """
     result = list()
@@ -315,7 +323,7 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     :return: True if gradient check passes, false otherwise.
     >>> X = np.matrix('1 2 3 5; 2 3 6 7; 5 2 11 -9')
     >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
-    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON_INIT=2)
+    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON_INIT=100)
     >>> lamb = 10
     >>> D = util.zero_Delta(4, 3, 10, 10)
     >>> result = nn_grad_check(X, y, D, Theta, lamb)
@@ -336,8 +344,8 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
                 J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
-                D_l_i_j = D[l][i, j]
-                if grad_approx is math.nan or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
+                D_l_i_j = D[l][0, i, j]
+                if np.isnan(grad_approx) or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
                     return False
     return True
 

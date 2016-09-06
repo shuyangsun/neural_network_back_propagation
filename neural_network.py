@@ -53,7 +53,7 @@ class NeuralNetwork:
             self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
             self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
             self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
-            self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
+            self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, lamb=0 if i is 0 else self.__lamb)
 
             # Do gradient check on the first iteration if turned on.
             if grad_check and i is 0:
@@ -61,7 +61,7 @@ class NeuralNetwork:
                                                       self.__y,
                                                       self.__D,
                                                       self.__Theta,
-                                                      lamb=self.__lamb,
+                                                      lamb=0 if i is 0 else self.__lamb,
                                                       EPSILON=10 ** -4)
                 if not grad_check_result:
                     print(Exception('Gradient check did not pass.'))
@@ -74,7 +74,7 @@ class NeuralNetwork:
             # Record cost and accuracy change
             cost_list.append(alg.nn_J_Theta(self.__neurons[-1],
                                             self.__y,
-                                            lamb=self.__lamb,
+                                            lamb=0 if i is 0 else self.__lamb,
                                             Theta=self.__Theta))
             accuracy_list.append(self.__testing_sample_accuracy())
 
