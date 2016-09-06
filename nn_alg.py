@@ -94,7 +94,7 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     if Theta is None or len(Theta) == 0:
         theta_squared_sum = 0
     else:
-        theta_squared_sums = [np.sum(np.power(theta_i, 2)) for theta_i in Theta]
+        theta_squared_sums = [np.sum(np.power(theta_i[:, 1:], 2)) for theta_i in Theta]
         theta_squared_sum = sum(theta_squared_sums)
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
@@ -336,8 +336,8 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
                 J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
-                derivative_l_i_j = D[l][i, j]
-                if grad_approx is not math.nan and math.fabs(grad_approx - derivative_l_i_j) > 10 ** (-9):
+                D_l_i_j = D[l][i, j]
+                if grad_approx is math.nan or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
                     return False
     return True
 

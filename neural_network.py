@@ -30,8 +30,10 @@ class NeuralNetwork:
         print('Started training...')
         start = time.time()
         check_iter_limit = iter_limit is not 0
-        i = 0
+        cost_list = []
+        accuracy_list = []
 
+        i = 0
         # Print iteration information and check iteration count or time limit.
         while (check_iter_limit and i < iter_limit) or not check_iter_limit:
             if (i + 1) % 10 is 0:
@@ -42,12 +44,8 @@ class NeuralNetwork:
 
             if (i + 1) is 2 or (i + 1) % 100 is 0:
                 print('-' * 50)
-                print('Iteration {0} cost is {1}.'.format(i + 1,
-                                                         alg.nn_J_Theta(self.__neurons[-1],
-                                                                        self.__y,
-                                                                        lamb=self.__lamb,
-                                                                        Theta=self.__Theta)))
-                self.__print_accuracy()
+                print('Iteration {0} cost is {1}.'.format(i + 1, cost_list[-1]))
+                print('Accuracy: {0:.2f}%.'.format(accuracy_list[-1]))
                 print('-' * 50)
 
             # Calculate delta, Delta and D. Then update Theta:
@@ -56,7 +54,6 @@ class NeuralNetwork:
             self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
             self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
             self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, self.__lamb)
-            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
 
             # Do gradient check on the first iteration if turned on.
             if grad_check and i is 0:
@@ -70,10 +67,23 @@ class NeuralNetwork:
                     print(Exception('Gradient check did not pass.'))
                 else:
                     print('Passed gradient check.')
+
+            # Update Theta after gradient checking.
+            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
+
+            # Record cost and accuracy change
+            cost_list.append(alg.nn_J_Theta(self.__neurons[-1],
+                                            self.__y,
+                                            lamb=self.__lamb,
+                                            Theta=self.__Theta))
+            accuracy_list.append(self.__testing_sample_accuracy())
+
             i += 1
+        print('-' * 50)
         print('Finished training, time used: {0}s.'.format(time.time() - start))
         print('Calculating error rate with test samples...')
-        self.__print_accuracy()
+        print('Accuracy: {0:.2f}%.'.format(accuracy_list[-1]))
+        return cost_list, accuracy_list, self.__Theta
 
     def predict(self, X):
         input_normalized = self.__feature_normalizer.normalize_new_feature(X)
@@ -81,8 +91,8 @@ class NeuralNetwork:
         mask = np.argmax(result, axis=1)
         return self.__unique_cat[mask.T]
 
-    def __print_accuracy(self):
+    def __testing_sample_accuracy(self):
         predict_result = self.predict(self.__X_test)
         correct_count = np.count_nonzero(predict_result == self.__y_test)
         error_rate = 1 - (correct_count / np.size(self.__y_test, axis=0))
-        print('Accuracy: {0:.2f}%.'.format((1 - error_rate) * 100))
+        return (1 - error_rate) * 100
