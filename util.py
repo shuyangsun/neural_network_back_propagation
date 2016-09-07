@@ -1,6 +1,8 @@
 import doctest
 import numpy as np
 import math
+import time
+import os
 
 
 def add_ones(matrix, is_vector_column=False):
@@ -85,13 +87,14 @@ def rand_Theta(num_features, num_classes, *S, EPSILON_INIT=0):
     return result
 
 
-def zero_Delta(num_features, num_classes, *S, m=1):
+def zero_Delta(num_features, num_classes, *S, m=1, dtype=np.float32):
     """
     Generates a three dimensional list of Deltas with zero as their value, used for back propagation calculation.
     :param num_features: Number of features.
     :param num_classes: Number of classes.
     :param S: List of number of neurons (without bias units) in each layer.
     :param m: Number of training samples.
+    :param dtype: Data type.
     :return: Delta with zero values that matches Theta's dimension.
     >>> result = zero_Delta(3, 2, [3])
     >>> len(result)
@@ -116,7 +119,7 @@ def zero_Delta(num_features, num_classes, *S, m=1):
     result = list()
     shapes = Theta_or_Delta_shapes(num_features, num_classes, *S, m=m)
     for m, S_l1, S_l in shapes:
-        result.append(np.zeros((m, S_l1, S_l)))
+        result.append(np.zeros((m, S_l1, S_l), dtype=dtype))
     return result
 
 
@@ -251,6 +254,36 @@ def sigmoid(z):
     True
     """
     return np.divide(1, (1 + np.power(math.e, -z)))
+
+
+def save_training_info_to_file(directory, iteration_num=None, cost=None, accuracy=None, Theta=None):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    path_wo_extension = directory + '/Theta_' + str(time.time())
+    path_w_extension = path_wo_extension + '.txt'
+
+    # Save unrolled Theta
+    unrolled_list = [theta_l.flatten() for theta_l in Theta]
+    unrolled = np.array([])
+    for ele in unrolled_list:
+        unrolled = np.append(unrolled, ele)
+    np.savetxt(path_w_extension, unrolled)
+
+    # Save other information
+    theta_shapes = ''
+    for theta_l in Theta:
+        theta_shapes += '{0} {1}; '.format(np.size(theta_l, axis=0), np.size(theta_l, axis=1))
+    theta_shapes = theta_shapes[: -2]
+
+    path_wo_extension += '_info'
+    path_w_extension = path_wo_extension + '.txt'
+    with open(path_w_extension, 'w') as file:
+        file.write('theta length = {0}\n'.format(len(Theta)))
+        file.write('theta shapes = {0}\n'.format(theta_shapes))
+        file.write('iteration number = {0}\n'.format(iteration_num))
+        file.write('cost = {0}\n'.format(cost))
+        file.write('accuracy = {0}%\n'.format(accuracy))
+        file.close()
 
 
 class DataProcessor:

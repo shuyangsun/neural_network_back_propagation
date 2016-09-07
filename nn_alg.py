@@ -1,5 +1,6 @@
 import doctest
 import numpy as np
+import numexpr as ne
 import util
 import math
 
@@ -86,15 +87,17 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     True
     """
     m = np.size(h_theta_x, axis=0)
-    diff_y_is_0 = np.nan_to_num(np.log(1 - h_theta_x))
-    diff_y_is_1 = np.nan_to_num(np.log(h_theta_x))
-    cost_y_is_0 = np.nan_to_num(np.multiply((1 - y), diff_y_is_0))
-    cost_y_is_1 = np.nan_to_num(np.multiply(y, diff_y_is_1))
-    cost_wo_regularization = - np.sum(cost_y_is_0 + cost_y_is_1) / m
+    cost_y_is_0 = np.nan_to_num(ne.evaluate('(1 - y) * log(1 - h_theta_x)'))
+    cost_y_is_1 = np.nan_to_num(ne.evaluate('y * log(h_theta_x)'))
+    cost_wo_regularization = -ne.evaluate('sum(cost_y_is_0 + cost_y_is_1)') / m
     if Theta is None or len(Theta) == 0:
         theta_squared_sum = 0
     else:
-        theta_squared_sums = [np.sum(np.power(theta_i[:, 1:], 2)) for theta_i in Theta]
+        theta_squared_sums = []
+        for theta_l in Theta:
+            theta_l_wo_0_column = theta_l[:, 1:]
+            theta_squared_sums.append(ne.evaluate('sum(theta_l_wo_0_column ** 2)'))
+        # theta_squared_sums = [np.sum(np.power(theta_i[:, 1:], 2)) for theta_i in Theta]
         theta_squared_sum = sum(theta_squared_sums)
     return cost_wo_regularization + lamb / (2 * m) * theta_squared_sum
 
@@ -164,7 +167,9 @@ def nn_delta(neurons, Theta, y):
         if l < len(Theta_rev) - 1:
             delta_next_layer = result[-1]
             a_l = neurons_rev[l + 1]
-            delta_cur_layer = np.multiply(delta_next_layer @ theta_l, np.multiply(a_l, (1 - a_l)))
+            # delta_cur_layer = np.multiply(delta_next_layer @ theta_l, np.multiply(a_l, (1 - a_l)))
+            delta_bp = delta_next_layer @ theta_l
+            delta_cur_layer = np.matrix(ne.evaluate('delta_bp * (a_l * (1 - a_l))'))
             delta_cur_layer = np.delete(delta_cur_layer, 0, 1)
             result.append(delta_cur_layer)
     return list(reversed(result))
@@ -228,8 +233,7 @@ def nn_Delta(Delta, delta, neurons):
         for (m, Delta_l_m) in enumerate(Delta_l):
             a_l_m = np.matrix(neurons[l][m])
             # delta ^ (l) here is actually delta ^ (l + 1), because there's no delta ^ (1) on input layer.
-            Delta_l_m = Delta_l_m + delta[l][m].T @ a_l_m
-            Delta_l[m] = Delta_l_m
+            Delta_l[m] = Delta_l_m + delta[l][m].T @ a_l_m
         result.append(Delta_l)
     return result
 
@@ -307,7 +311,7 @@ def nn_update_Theta_with_D(Theta, D, alpha=0.01):
     """
     result = list()
     for (l, theta_l) in enumerate(Theta):
-        result.append(theta_l - alpha * D[l])
+        result.append((theta_l - alpha * D[l]).astype(np.float32))
     return result
 
 
@@ -344,7 +348,7 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
                 J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
                 J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
                 grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
-                D_l_i_j = D[l][0, i, j]
+                D_l_i_j = D[l][i, j]
                 if np.isnan(grad_approx) or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
                     return False
     return True

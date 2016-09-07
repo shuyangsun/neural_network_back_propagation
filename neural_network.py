@@ -22,16 +22,14 @@ class NeuralNetwork:
         self.__feature_normalizer = util.FeatureNormalizer(self.__X)
         self.__X = self.__feature_normalizer.normalized_feature()
         self.__neurons = None
-        self.__delta = None
-        self.__Delta = None
-        self.__D = None
 
-    def train(self, iter_limit=0, time_limit=0, grad_check=True):
+    def train(self, iter_limit=0, time_limit=0, grad_check=True, save_to_file=False):
         print('Started training...')
         start = time.time()
         check_iter_limit = iter_limit is not 0
         cost_list = []
         accuracy_list = []
+        self.__switch_to_double_precision()
 
         i = 0
         # Print iteration information and check iteration count or time limit.
@@ -47,19 +45,25 @@ class NeuralNetwork:
                 print('Iteration {0} cost is {1}.'.format(i + 1, cost_list[-1]))
                 print('Accuracy: {0:.2f}%.'.format(accuracy_list[-1]))
                 print('-' * 50)
+                if save_to_file:
+                    util.save_training_info_to_file(directory='Theta_' + str(start),
+                                                    iteration_num=i + 1,
+                                                    cost=cost_list[-1],
+                                                    accuracy=accuracy_list[-1],
+                                                    Theta=self.__Theta)
 
             # Calculate delta, Delta and D. Then update Theta:
-            self.__Delta = util.zero_Delta(self.__n, self.__K, self.__S, m=self.__m)
+            Delta = util.zero_Delta(self.__n, self.__K, self.__S, m=self.__m, dtype=self.__dtype)
             self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
-            self.__delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
-            self.__Delta = alg.nn_Delta(self.__Delta, self.__delta, self.__neurons)
-            self.__D = alg.nn_D(self.__m, self.__Delta, self.__Theta, lamb=0 if i is 0 else self.__lamb)
+            delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
+            Delta = alg.nn_Delta(Delta, delta, self.__neurons)
+            D = alg.nn_D(self.__m, Delta, self.__Theta, lamb=0 if i is 0 else self.__lamb)
 
-            # Do gradient check on the first iteration if turned on.
+            # Do gradient check without lambda on the first iteration if turned on.
             if grad_check and i is 0:
                 grad_check_result = alg.nn_grad_check(self.__X,
                                                       self.__y,
-                                                      self.__D,
+                                                      D,
                                                       self.__Theta,
                                                       lamb=0 if i is 0 else self.__lamb,
                                                       EPSILON=10 ** -4)
@@ -69,7 +73,7 @@ class NeuralNetwork:
                     print('Passed gradient check.')
 
             # Update Theta after gradient checking.
-            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, self.__D, alpha=self.__alpha)
+            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha)
 
             # Record cost and accuracy change
             cost_list.append(alg.nn_J_Theta(self.__neurons[-1],
@@ -77,6 +81,9 @@ class NeuralNetwork:
                                             lamb=0 if i is 0 else self.__lamb,
                                             Theta=self.__Theta))
             accuracy_list.append(self.__testing_sample_accuracy())
+
+            if i == 0:
+                self.__switch_to_single_precision()
 
             i += 1
         print('-' * 50)
@@ -96,3 +103,24 @@ class NeuralNetwork:
         correct_count = np.count_nonzero(predict_result == self.__y_test)
         error_rate = 1 - (correct_count / np.size(self.__y_test, axis=0))
         return (1 - error_rate) * 100
+
+    def __switch_to_double_precision(self):
+        self.__dtype = np.float64
+        self.__switch_data_dtype()
+
+    def __switch_to_single_precision(self):
+        self.__dtype = np.float32
+        self.__switch_data_dtype()
+
+    def __switch_data_dtype(self):
+        self.__X = self.__X.astype(self.__dtype)
+        self.__y = self.__y.astype(self.__dtype)
+        self.__X_test = self.__X_test.astype(self.__dtype)
+        self.__y_test = self.__y_test.astype(self.__dtype)
+        if self.__Theta is not None:
+            for (l, theta_l) in enumerate(self.__Theta):
+                self.__Theta[l] = theta_l.astype(self.__dtype)
+        if self.__neurons is not None:
+            for (l, a_l) in enumerate(self.__neurons):
+                self.__neurons[l] = a_l.astype(self.__dtype)
+
