@@ -12,7 +12,7 @@ augmented_matrix = np.append(X, y, axis=1)
 np.random.shuffle(augmented_matrix)
 X = augmented_matrix[:, :-1]
 y = augmented_matrix[:, -1]
-test_sample_size = 100
+test_sample_size = 500
 test_ratio = test_sample_size / np.size(X, axis=0)
 # Learning rate
 alpha = 0.03
