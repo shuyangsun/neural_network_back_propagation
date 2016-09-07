@@ -189,22 +189,16 @@ def nn_Delta(Delta, delta, neurons):
     >>> len(result)
     3
     >>> np.size(result[0], axis=0)
-    1
-    >>> np.size(result[0], axis=1)
     10
-    >>> np.size(result[0], axis=2)
+    >>> np.size(result[0], axis=1)
     11
     >>> np.size(result[1], axis=0)
-    1
-    >>> np.size(result[1], axis=1)
     10
-    >>> np.size(result[1], axis=2)
+    >>> np.size(result[1], axis=1)
     11
     >>> np.size(result[2], axis=0)
-    1
-    >>> np.size(result[2], axis=1)
     5
-    >>> np.size(result[2], axis=2)
+    >>> np.size(result[2], axis=1)
     11
     >>> for ele in result:
     ...     (ele[0] == 1).all()
@@ -220,8 +214,6 @@ def nn_Delta(Delta, delta, neurons):
     >>> np.size(result[0], axis=0)
     1
     >>> np.size(result[0], axis=1)
-    1
-    >>> np.size(result[0], axis=2)
     6
     >>> for ele in result:
     ...     (ele[0] == 1).all()
@@ -234,7 +226,7 @@ def nn_Delta(Delta, delta, neurons):
             a_l_m = np.matrix(neurons[l][m])
             # delta ^ (l) here is actually delta ^ (l + 1), because there's no delta ^ (1) on input layer.
             Delta_l[m] = Delta_l_m + delta[l][m].T @ a_l_m
-        result.append(Delta_l)
+        result.append(np.sum(Delta_l, axis=0))
     return result
 
 
@@ -282,24 +274,22 @@ def nn_D(m, Delta, Theta, lamb):
     >>> (D_2[0, 1:0] == 100).all()
     True
     """
-    Delta_sum = list()
-    for Delta_l in Delta:
-        Delta_sum.append(np.sum(Delta_l, axis=0))
     result = list()
     for (l, theta_l) in enumerate(Theta):
         lambda_l = theta_l * 0 + lamb
         lambda_l[:, 0] = 0
-        D_l = 1 / m * (Delta_sum[l] + np.multiply(lambda_l, theta_l))
+        D_l = 1 / m * (Delta[l] + np.multiply(lambda_l, theta_l))
         result.append(D_l)
     return result
 
 
-def nn_update_Theta_with_D(Theta, D, alpha=0.01):
+def nn_update_Theta_with_D(Theta, D, alpha=0.01, dtype=np.float32):
     """
     Update θ using calculated derivative of θ.
     :param Theta: Three dimensional list of θ.
     :param D: Three dimensional list of derivative of θ.
     :param alpha: Learning rate.
+    :param dtype: Data type.
     :return: Updated θ.
     >>> Theta = [np.matrix('1 2 3 4 5')]
     >>> D = [np.matrix('0 1 2 3 4')]
@@ -311,7 +301,7 @@ def nn_update_Theta_with_D(Theta, D, alpha=0.01):
     """
     result = list()
     for (l, theta_l) in enumerate(Theta):
-        result.append((theta_l - alpha * D[l]).astype(np.float32))
+        result.append((theta_l - alpha * D[l]).astype(dtype))
     return result
 
 

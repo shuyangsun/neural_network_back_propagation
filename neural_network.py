@@ -73,7 +73,7 @@ class NeuralNetwork:
                     print('Passed gradient check.')
 
             # Update Theta after gradient checking.
-            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha)
+            self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
 
             # Record cost and accuracy change
             cost_list.append(alg.nn_J_Theta(self.__neurons[-1],
