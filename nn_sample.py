@@ -15,7 +15,7 @@ y = augmented_matrix[:, -1]
 test_sample_size = 100
 test_ratio = test_sample_size / np.size(X, axis=0)
 # Learning rate
-alpha = 0.1
+alpha = 0.03
 # Regularization
 lamb = 1
 # Random Theta range
