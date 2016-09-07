@@ -22,7 +22,7 @@ lamb = 1
 EPSILON_INIT = 0
 
 trainer = nn.NeuralNetwork(X, y, test_ratio, alpha, lamb, EPSILON_INIT, 25)
-cost_list, accuracy_list, Theta = trainer.train(iter_limit=1000,
+cost_list, accuracy_list, Theta = trainer.train(iter_limit=3000,
                                                 time_limit=0,
                                                 grad_check=True,
                                                 save_to_file=False)
@@ -46,7 +46,7 @@ plt.ylabel('accuracy rate (%)')
 
 x = list(range(len(accuracy_list)))
 x = [num * 10 for num in x]
-x_new = np.linspace(x[0], x[-1], len(x) * 3)
+x_new = np.linspace(x[0], x[-1], len(x) * 10)
 y_new = spline(x, accuracy_list, x_new)
 
 figure.plot(x_new, y_new, color='blue')
