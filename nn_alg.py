@@ -3,6 +3,7 @@ import numpy as np
 import numexpr as ne
 import util
 import math
+import time
 
 
 def nn_forward_prop(X, Theta):
@@ -307,7 +308,10 @@ def nn_update_Theta_with_D(Theta, D, alpha=0.01, dtype=np.float32):
     return result
 
 
-def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=100, print_debug_info=False):
+class GradientCheckingFailsException(Exception):
+    pass
+
+def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=100):
     """
     Check if the gradient approximation is the same as D (derivative of J(θ)).
     :param X: Training set inputs.
@@ -317,27 +321,32 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=100
     :param lamb: Regularization parameter λ.
     :param EPSILON: Left and right side ε value for gradient checking.
     :param num_theta_to_check: How many theta's do we want to check.
-    :param print_debug_info: Print checking progress if True.
     :return: True if gradient check passes, false otherwise.
     >>> X = np.matrix('1 2 3 5; 2 3 6 7; 5 2 11 -9')
-    >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
-    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON_INIT=100)
+    >>> y = np.matrix('1 0 0')
+    >>> Theta = util.rand_Theta(4, 3, 10, 10, EPSILON_INIT=0.1)
     >>> lamb = 10
     >>> D = util.zero_Delta(4, 3, 10, 10)
-    >>> result = nn_grad_check(X, y, D, Theta, lamb)
-    >>> result
-    False
+    >>> for l, D_l in enumerate(D):
+    ...     D[l] = np.sum(D_l, axis=0)
+    >>> try:
+    ...     result = nn_grad_check(X, y, D, Theta, lamb)
+    ... except Exception as e:
+    ...     e is not None
+    Started gradient checking...
+    Checking 100 thetas...
+    True
     """
+    grad_check_start = time.time()
+    print('Started gradient checking...')
+    print('Checking {0} randomly selected thetas...'.format(num_theta_to_check))
     L = len(Theta)
     rand_l = util.rand_int_in_range_lst(0, L, num_theta_to_check)
-    print('Checking Theta(l, i, j):')
     for l in rand_l:
         i_len = np.size(Theta[l], axis=0)
         j_len = np.size(Theta[l], axis=1)
         i = util.rand_int_in_range_lst(0, i_len)[0]
         j = util.rand_int_in_range_lst(0, j_len)[0]
-        if print_debug_info:
-            print('({0}, {1}, {2})'.format(l, i, j))
         Theta_plus = util.copy_list_of_ndarray(Theta)
         Theta_minus = util.copy_list_of_ndarray(Theta)
         perturb = np.matrix(np.zeros((np.size(Theta[l], axis=0), np.size(Theta[l], axis=1))))
@@ -351,7 +360,9 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=100
         grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
         D_l_i_j = D[l][i, j]
         if np.isnan(grad_approx) or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
-            return False
+            raise GradientCheckingFailsException('Gradient check did not pass.')
+    print('Gradient check passed.')
+    print('Used {0:.2f}s for gradient checking.'.format(time.time() - grad_check_start))
     return True
 
 if __name__ == '__main__':

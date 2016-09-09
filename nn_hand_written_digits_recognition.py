@@ -17,7 +17,7 @@ lamb = 10
 EPSILON_INIT = 0
 
 trainer = nn.NeuralNetwork(X, y, alpha, lamb, EPSILON_INIT, 25)
-trainer.train(iter_limit=10, time_limit=0, grad_check=True, save_to_file=False)
+trainer.train(iter_limit=100, time_limit=0, grad_check=True, save_to_file=False)
 print(trainer.predict(np.matrix(X[-10:-1])))
 print(y[-10:-1])
 

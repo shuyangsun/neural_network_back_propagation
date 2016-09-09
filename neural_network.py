@@ -8,7 +8,7 @@ import pylab as p
 
 
 class NeuralNetwork:
-    def __init__(self, X, y, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
+    def __init__(self, X, y, alpha=0.01, lamb=0, EPSILON_INIT=1, *num_units_hidden_layer):
         training_set_ratio = 0.6
         num_set_samples = np.size(X, axis=0)
         self.__n = np.size(X, axis=1)
@@ -29,11 +29,11 @@ class NeuralNetwork:
         self.__unique_cat, self.__y_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y)
         _t, self.__y_cv_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y_cv)
         self.__K = np.size(self.__unique_cat)
-        self.__S = S
+        self.__num_units_hidden_layer_lst = num_units_hidden_layer
         self.__lamb = lamb
         self.__alpha = alpha
         self.__EPSILON_INIT = EPSILON_INIT
-        self.__Theta = util.rand_Theta(self.__n, self.__K, self.__S, EPSILON_INIT=EPSILON_INIT)
+        self.__Theta = util.rand_Theta(self.__n, self.__K, self.__num_units_hidden_layer_lst, EPSILON_INIT=EPSILON_INIT)
         self.__feature_normalizer = util.FeatureNormalizer(self.__X)
         self.__X = self.__feature_normalizer.normalized_feature()
         self.__neurons = None
@@ -62,7 +62,7 @@ class NeuralNetwork:
                 print('| Iteration: {0}'.format(i + 1))
                 print('| Cost of training set: {0}'.format(self.cost_training_list[-1]))
                 print('| Cost of cross validation set: {0}'.format(self.cost_cv_list[-1]))
-                print('| Accuracy: {0:.2f}%'.format(self.accuracy_test_list[-1]))
+                print('| Accuracy of testing set: {0:.2f}%'.format(self.accuracy_test_list[-1]))
                 print('-' * 50)
                 if save_to_file:
                     util.save_training_info_to_file(directory='Theta_' + str(start),
@@ -72,7 +72,11 @@ class NeuralNetwork:
                                                     Theta=self.__Theta)
 
             # Calculate delta, Delta and D. Then update Theta:
-            Delta = util.zero_Delta(self.__n, self.__K, self.__S, m=self.__m, dtype=self.__dtype)
+            Delta = util.zero_Delta(self.__n,
+                                    self.__K,
+                                    self.__num_units_hidden_layer_lst,
+                                    m=self.__m,
+                                    dtype=self.__dtype)
             self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
             delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y_b))
             Delta = alg.nn_Delta(Delta, delta, self.__neurons)
@@ -80,20 +84,15 @@ class NeuralNetwork:
 
             # Do gradient check without lambda on the first iteration if turned on.
             if grad_check and i is 0:
-                print('Started gradient checking...')
-                grad_check_start = time.time()
-                grad_check_result = alg.nn_grad_check(self.__X,
-                                                      self.__y_b,
-                                                      D,
-                                                      self.__Theta,
-                                                      lamb=0 if i is 0 else self.__lamb,
-                                                      EPSILON=10 ** -4,
-                                                      print_debug_info=True)
-                if not grad_check_result:
-                    print(Exception('Gradient check did not pass.'))
-                else:
-                    print('Gradient check passed.')
-                print('Used {0:.2f}s for gradient checking.'.format(time.time() - grad_check_start))
+                try:
+                    alg.nn_grad_check(self.__X,
+                                      self.__y_b,
+                                      D,
+                                      self.__Theta,
+                                      lamb=0 if i is 0 else self.__lamb,
+                                      EPSILON=10 ** -4)
+                except alg.GradientCheckingFailsException as e:
+                    print(e)
 
             # Update Theta after gradient checking.
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
@@ -156,7 +155,7 @@ class NeuralNetwork:
 
     def visualize_Theta(self):
         for l, theta_l in enumerate(self.__Theta):
-            plt.figure('Theta({0})'.format(l + 1), figsize=(15, 15))
+            plt.figure('Theta({0})'.format(l + 1), figsize=(30, 30))
             theta_l_no_bias_units = np.delete(theta_l, obj=0, axis=1)
             num_pic = np.size(theta_l_no_bias_units, axis=0)
             num_pxl = np.size(theta_l_no_bias_units, axis=1)
