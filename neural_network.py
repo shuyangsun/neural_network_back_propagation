@@ -123,37 +123,37 @@ class NeuralNetwork:
         mask = np.argmax(result, axis=1)
         return self.__unique_cat[mask.T]
 
-    def plot_training_info(self):
-        plt.figure('Training Info', figsize=(30, 10))
-        color_hex = '#00BFFF'
+    def plot_training_info(self, color='#00BFFF'):
+        plt.figure('Training Info', figsize=(30, 30))
+        color=color
 
         # Cost training set plot
-        figure = plt.subplot(1, 3, 1)
+        figure = plt.subplot(2, 2, 1)
         plt.title('Cost of Training Set')
         plt.xlabel('iteration')
         plt.ylabel('cost')
-        figure.plot(self.cost_training_list, color=color_hex)
+        figure.plot(self.cost_training_list, color=color)
         p.fill_between(range(len(self.cost_training_list)),
-                       self.cost_training_list, facecolor=color_hex,
+                       self.cost_training_list, facecolor=color,
                        alpha=0.25)
 
         # Cost training set plot
-        figure = plt.subplot(1, 3, 2)
+        figure = plt.subplot(2, 2, 2)
         plt.title('Cost of Cross Validation Set')
         plt.xlabel('iteration')
         plt.ylabel('cost')
-        figure.plot(self.cost_cv_list, color=color_hex)
-        p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color_hex, alpha=0.25)
+        figure.plot(self.cost_cv_list, color=color)
+        p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color, alpha=0.25)
 
         # Accuracy plot
-        figure = plt.subplot(1, 3, 3)
+        figure = plt.subplot(2, 2, 3)
         plt.title('Accuracy of Testing Set')
         plt.xlabel('iteration')
         plt.ylabel('accuracy rate (%)')
-        figure.plot(self.accuracy_test_list, color=color_hex)
-        p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color_hex, alpha=0.25)
+        figure.plot(self.accuracy_test_list, color=color)
+        p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color, alpha=0.25)
 
-    def visualize_Theta(self):
+    def visualize_Theta(self, cmap='Greys_r', origin='lower'):
         for l, theta_l in enumerate(self.__Theta):
             plt.figure('Theta({0})'.format(l + 1), figsize=(30, 30))
             theta_l_no_bias_units = np.delete(theta_l, obj=0, axis=1)
@@ -171,7 +171,7 @@ class NeuralNetwork:
                 figure = plt.subplot(width_num, height_num, l + 1)
                 figure.axes.get_xaxis().set_visible(False)
                 figure.axes.get_yaxis().set_visible(False)
-                plt.imshow(matrix, cmap='Greys_r')
+                plt.imshow(matrix, cmap=cmap, origin=origin)
             plt.tight_layout()
 
     def show_plot(self):
