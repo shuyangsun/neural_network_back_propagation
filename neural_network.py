@@ -1,19 +1,33 @@
 import util
 import nn_alg as alg
 import numpy as np
+import matplotlib.pyplot as plt
 import math
 import time
+import pylab as p
 
 
 class NeuralNetwork:
     def __init__(self, X, y, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
         training_set_ratio = 0.6
+        num_set_samples = np.size(X, axis=0)
         self.__n = np.size(X, axis=1)
-        training_count = math.floor(np.size(X, axis=0) * training_set_ratio)
-        self.__X, self.__X_test = util.DataProcessor.partition(X, training_count)
-        self.__y, self.__y_test = util.DataProcessor.partition(y, training_count)
+
+        # Partition data to training, cross validation, and testing sets.
+        num_training_set_samples = math.floor(np.size(X, axis=0) * training_set_ratio)
+        num_cv_set_samples = math.floor((num_set_samples - num_training_set_samples) / 2)
+        self.__X, self.__X_cv, self.__X_test = util.DataProcessor.partition(X,
+                                                                            num_training_set_samples,
+                                                                            num_training_set_samples +
+                                                                            num_cv_set_samples)
+        self.__y, self.__y_cv, self.__y_test = util.DataProcessor.partition(y,
+                                                                            num_training_set_samples,
+                                                                            num_training_set_samples +
+                                                                            num_cv_set_samples)
+
         self.__m = np.size(self.__X, axis=0)
-        self.__unique_cat, self.__y = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y)
+        self.__unique_cat, self.__y_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y)
+        _t, self.__y_cv_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y_cv)
         self.__K = np.size(self.__unique_cat)
         self.__S = S
         self.__lamb = lamb
@@ -24,12 +38,14 @@ class NeuralNetwork:
         self.__X = self.__feature_normalizer.normalized_feature()
         self.__neurons = None
 
+        self.cost_training_list = []
+        self.cost_cv_list = []
+        self.accuracy_test_list = []
+
     def train(self, iter_limit=0, time_limit=0, grad_check=True, save_to_file=False):
         print('Started training...')
         start = time.time()
         check_iter_limit = iter_limit is not 0
-        cost_list = []
-        accuracy_list = []
         self.__switch_to_double_precision()
 
         i = 0
@@ -44,20 +60,21 @@ class NeuralNetwork:
             if (i + 1) is 2 or (i + 1) % 100 is 0:
                 print('-' * 50)
                 print('| Iteration: {0}'.format(i + 1))
-                print('| Cost of training set: {0}'.format(cost_list[-1]))
-                print('| Accuracy: {0:.2f}%'.format(accuracy_list[-1]))
+                print('| Cost of training set: {0}'.format(self.cost_training_list[-1]))
+                print('| Cost of cross validation set: {0}'.format(self.cost_cv_list[-1]))
+                print('| Accuracy: {0:.2f}%'.format(self.accuracy_test_list[-1]))
                 print('-' * 50)
                 if save_to_file:
                     util.save_training_info_to_file(directory='Theta_' + str(start),
                                                     iteration_num=i + 1,
-                                                    cost=cost_list[-1],
-                                                    accuracy=accuracy_list[-1],
+                                                    cost=self.cost_training_list[-1],
+                                                    accuracy=self.accuracy_test_list[-1],
                                                     Theta=self.__Theta)
 
             # Calculate delta, Delta and D. Then update Theta:
             Delta = util.zero_Delta(self.__n, self.__K, self.__S, m=self.__m, dtype=self.__dtype)
             self.__neurons = alg.nn_forward_prop(self.__X, self.__Theta)
-            delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y))
+            delta = alg.nn_delta(self.__neurons, self.__Theta, np.matrix(self.__y_b))
             Delta = alg.nn_Delta(Delta, delta, self.__neurons)
             D = alg.nn_D(self.__m, Delta, self.__Theta, lamb=0 if i is 0 else self.__lamb)
 
@@ -66,7 +83,7 @@ class NeuralNetwork:
                 print('Started gradient checking...')
                 grad_check_start = time.time()
                 grad_check_result = alg.nn_grad_check(self.__X,
-                                                      self.__y,
+                                                      self.__y_b,
                                                       D,
                                                       self.__Theta,
                                                       lamb=0 if i is 0 else self.__lamb,
@@ -82,11 +99,15 @@ class NeuralNetwork:
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
 
             # Record cost and accuracy change
-            cost_list.append(alg.nn_J_Theta(self.__neurons[-1],
-                                            self.__y,
-                                            lamb=0 if i is 0 else self.__lamb,
-                                            Theta=self.__Theta))
-            accuracy_list.append(self.__testing_sample_accuracy())
+            self.cost_training_list.append(alg.nn_J_Theta(self.__neurons[-1],
+                                                          self.__y_b,
+                                                          lamb=0 if i is 0 else self.__lamb,
+                                                          Theta=self.__Theta))
+            self.cost_cv_list.append(alg.nn_J_Theta(alg.nn_forward_prop(self.__X_cv, self.__Theta)[-1],
+                                                    self.__y_cv_b,
+                                                    lamb=0 if i is 0 else self.__lamb,
+                                                    Theta=self.__Theta))
+            self.accuracy_test_list.append(self.__testing_sample_accuracy())
 
             if i == 0:
                 self.__switch_to_single_precision()
@@ -94,15 +115,68 @@ class NeuralNetwork:
             i += 1
         print('-' * 50)
         print('Finished training, time used: {0}s'.format(time.time() - start))
-        print('Calculating error rate with test samples...')
-        print('Accuracy: {0:.2f}%'.format(accuracy_list[-1]))
-        return cost_list, accuracy_list, self.__Theta
+        print('Accuracy of testing set: {0:.2f}%'.format(self.accuracy_test_list[-1]))
+        print('-' * 50)
 
     def predict(self, X):
         input_normalized = self.__feature_normalizer.normalize_new_feature(X)
         result = alg.nn_forward_prop(input_normalized, self.__Theta)[-1]
         mask = np.argmax(result, axis=1)
         return self.__unique_cat[mask.T]
+
+    def plot_training_info(self):
+        plt.figure('Training Info', figsize=(30, 10))
+        color_hex = '#00BFFF'
+
+        # Cost training set plot
+        figure = plt.subplot(1, 3, 1)
+        plt.title('Cost of Training Set')
+        plt.xlabel('iteration')
+        plt.ylabel('cost')
+        figure.plot(self.cost_training_list, color=color_hex)
+        p.fill_between(range(len(self.cost_training_list)),
+                       self.cost_training_list, facecolor=color_hex,
+                       alpha=0.25)
+
+        # Cost training set plot
+        figure = plt.subplot(1, 3, 2)
+        plt.title('Cost of Cross Validation Set')
+        plt.xlabel('iteration')
+        plt.ylabel('cost')
+        figure.plot(self.cost_cv_list, color=color_hex)
+        p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color_hex, alpha=0.25)
+
+        # Accuracy plot
+        figure = plt.subplot(1, 3, 3)
+        plt.title('Accuracy of Testing Set')
+        plt.xlabel('iteration')
+        plt.ylabel('accuracy rate (%)')
+        figure.plot(self.accuracy_test_list, color=color_hex)
+        p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color_hex, alpha=0.25)
+
+    def visualize_Theta(self):
+        for l, theta_l in enumerate(self.__Theta):
+            plt.figure('Theta({0})'.format(l + 1), figsize=(15, 15))
+            theta_l_no_bias_units = np.delete(theta_l, obj=0, axis=1)
+            num_pic = np.size(theta_l_no_bias_units, axis=0)
+            num_pxl = np.size(theta_l_no_bias_units, axis=1)
+
+            width_num = int(np.ceil(np.sqrt(num_pic)))
+            height_num = int(np.ceil(num_pic / width_num))
+
+            width_pxl = int(np.ceil(np.sqrt(num_pxl)))
+            height_pxl = int(np.ceil(num_pxl / width_pxl))
+
+            for l, theta_l_i in enumerate(theta_l_no_bias_units):
+                matrix = theta_l_i.reshape(height_pxl, width_pxl)
+                figure = plt.subplot(width_num, height_num, l + 1)
+                figure.axes.get_xaxis().set_visible(False)
+                figure.axes.get_yaxis().set_visible(False)
+                plt.imshow(matrix, cmap='Greys_r')
+            plt.tight_layout()
+
+    def show_plot(self):
+        plt.show()
 
     def __testing_sample_accuracy(self):
         predict_result = self.predict(self.__X_test)

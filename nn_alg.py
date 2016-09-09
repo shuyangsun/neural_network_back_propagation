@@ -307,7 +307,7 @@ def nn_update_Theta_with_D(Theta, D, alpha=0.01, dtype=np.float32):
     return result
 
 
-def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=10, print_debug_info=False):
+def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=100, print_debug_info=False):
     """
     Check if the gradient approximation is the same as D (derivative of J(θ)).
     :param X: Training set inputs.
@@ -330,13 +330,14 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=10,
     """
     L = len(Theta)
     rand_l = util.rand_int_in_range_lst(0, L, num_theta_to_check)
+    print('Checking Theta(l, i, j):')
     for l in rand_l:
         i_len = np.size(Theta[l], axis=0)
         j_len = np.size(Theta[l], axis=1)
         i = util.rand_int_in_range_lst(0, i_len)[0]
         j = util.rand_int_in_range_lst(0, j_len)[0]
         if print_debug_info:
-            print('Checking Theta(l = {0}, i = {1}, j = {2})...'.format(l, i, j))
+            print('({0}, {1}, {2})'.format(l, i, j))
         Theta_plus = util.copy_list_of_ndarray(Theta)
         Theta_minus = util.copy_list_of_ndarray(Theta)
         perturb = np.matrix(np.zeros((np.size(Theta[l], axis=0), np.size(Theta[l], axis=1))))

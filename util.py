@@ -1,5 +1,6 @@
 import doctest
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import time
 import os
@@ -357,8 +358,8 @@ class DataProcessor:
         return A[:, :-1], A[:, -1]
 
     @staticmethod
-    def partition(A, atInd):
-        return A[:atInd], A[atInd:]
+    def partition(A, idx_1, idx_2):
+        return A[:idx_1], A[idx_1:idx_2], A[idx_2:]
 
     @staticmethod
     def get_unique_categories(output, case_sensitive=True):
