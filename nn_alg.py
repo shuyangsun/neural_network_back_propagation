@@ -307,7 +307,7 @@ def nn_update_Theta_with_D(Theta, D, alpha=0.01, dtype=np.float32):
     return result
 
 
-def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
+def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001, num_theta_to_check=10, print_debug_info=False):
     """
     Check if the gradient approximation is the same as D (derivative of J(θ)).
     :param X: Training set inputs.
@@ -316,6 +316,8 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     :param Theta: Three dimensional list of θ.
     :param lamb: Regularization parameter λ.
     :param EPSILON: Left and right side ε value for gradient checking.
+    :param num_theta_to_check: How many theta's do we want to check.
+    :param print_debug_info: Print checking progress if True.
     :return: True if gradient check passes, false otherwise.
     >>> X = np.matrix('1 2 3 5; 2 3 6 7; 5 2 11 -9')
     >>> y = np.matrix('1 0 0; 0 1 0 ; 0 0 1')
@@ -326,23 +328,29 @@ def nn_grad_check(X, y, D, Theta, lamb=0, EPSILON=0.0001):
     >>> result
     False
     """
-    for l in range(len(Theta)):
-        for i in range(np.size(Theta[l], axis=0)):
-            for j in range(np.size(Theta[l], axis=1)):
-                Theta_plus = util.copy_list_of_ndarray(Theta)
-                Theta_minus = util.copy_list_of_ndarray(Theta)
-                perturb = np.matrix(np.zeros((np.size(Theta[l], axis=0), np.size(Theta[l], axis=1))))
-                perturb[i, j] = EPSILON
-                Theta_plus[l] += perturb
-                Theta_minus[l] -= perturb
-                h_theta_x_plus = nn_forward_prop(X, Theta_plus)[-1]
-                h_theta_x_minus = nn_forward_prop(X, Theta_minus)[-1]
-                J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
-                J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
-                grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
-                D_l_i_j = D[l][i, j]
-                if np.isnan(grad_approx) or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
-                    return False
+    L = len(Theta)
+    rand_l = util.rand_int_in_range_lst(0, L, num_theta_to_check)
+    for l in rand_l:
+        i_len = np.size(Theta[l], axis=0)
+        j_len = np.size(Theta[l], axis=1)
+        i = util.rand_int_in_range_lst(0, i_len)[0]
+        j = util.rand_int_in_range_lst(0, j_len)[0]
+        if print_debug_info:
+            print('Checking Theta(l = {0}, i = {1}, j = {2})...'.format(l, i, j))
+        Theta_plus = util.copy_list_of_ndarray(Theta)
+        Theta_minus = util.copy_list_of_ndarray(Theta)
+        perturb = np.matrix(np.zeros((np.size(Theta[l], axis=0), np.size(Theta[l], axis=1))))
+        perturb[i, j] = EPSILON
+        Theta_plus[l] += perturb
+        Theta_minus[l] -= perturb
+        h_theta_x_plus = nn_forward_prop(X, Theta_plus)[-1]
+        h_theta_x_minus = nn_forward_prop(X, Theta_minus)[-1]
+        J_Theta_plus = nn_J_Theta(h_theta_x_plus, y, lamb, Theta_plus)
+        J_Theta_minus = nn_J_Theta(h_theta_x_minus, y, lamb, Theta_minus)
+        grad_approx = (J_Theta_plus - J_Theta_minus) / (2 * EPSILON)
+        D_l_i_j = D[l][i, j]
+        if np.isnan(grad_approx) or math.fabs(grad_approx - D_l_i_j) > 10 ** -5:
+            return False
     return True
 
 if __name__ == '__main__':

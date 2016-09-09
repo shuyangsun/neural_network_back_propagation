@@ -68,11 +68,12 @@ class NeuralNetwork:
                                                       D,
                                                       self.__Theta,
                                                       lamb=0 if i is 0 else self.__lamb,
-                                                      EPSILON=10 ** -4)
+                                                      EPSILON=10 ** -4,
+                                                      print_debug_info=True)
                 if not grad_check_result:
                     print(Exception('Gradient check did not pass.'))
                 else:
-                    print('Passed gradient check.')
+                    print('Gradient check passed.')
                 print('Used {0:.2f}s for gradient checking.'.format(time.time() - grad_check_start))
 
             # Update Theta after gradient checking.

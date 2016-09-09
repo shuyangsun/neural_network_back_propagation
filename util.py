@@ -1,5 +1,6 @@
 import doctest
 import numpy as np
+import random
 import time
 import os
 
@@ -285,6 +286,67 @@ def save_training_info_to_file(directory, iteration_num=None, cost=None, accurac
         file.close()
 
 
+def copy_list_of_ndarray(lst):
+    result = []
+    for ele in lst:
+        result.append(np.copy(ele))
+    return result
+
+
+def rand_int_in_range_lst(start, stop, count=1):
+    """
+    Generates a list with count number of random integers within specified range.
+    :param start: Start of range (inclusive).
+    :param stop: End of range (exclusive).
+    :param count: Number of integers to generate.
+    :return: List of all generated integers.
+    >>> start = 0
+    >>> stop = 10
+    >>> count = 1
+    >>> result = rand_int_in_range_lst(start, stop, count)
+    >>> len(result) == count
+    True
+    >>> all_in_range = True
+    >>> for ele in result:
+    ...     if ele < start or ele >= stop:
+    ...         all_in_range = False
+    ...         break
+    >>> all_in_range
+    True
+    >>> start = 0
+    >>> stop = 10
+    >>> count = 0
+    >>> result = rand_int_in_range_lst(start, stop, count)
+    >>> len(result) == count
+    True
+    >>> all_in_range = True
+    >>> for ele in result:
+    ...     if ele < start or ele >= stop:
+    ...         all_in_range = False
+    ...         break
+    >>> all_in_range
+    True
+    >>> start = 0
+    >>> stop = 1
+    >>> count = 5
+    >>> result = rand_int_in_range_lst(start, stop, count)
+    >>> len(result) == count
+    True
+    >>> all_in_range = True
+    >>> for ele in result:
+    ...     if ele < start or ele >= stop:
+    ...         all_in_range = False
+    ...         break
+    >>> all_in_range
+    True
+    """
+    assert(stop > start)
+    result = list()
+    for _ in range(count):
+        result.append(random.randrange(start, stop))
+    return result
+
+
 class DataProcessor:
     @staticmethod
     def add_x0_column(A):
@@ -350,13 +412,6 @@ class FeatureNormalizer:
             self.__std = np.std(self.__data, axis=0)
         mask = self.__std == 0
         self.__std[mask] = 1
-
-
-def copy_list_of_ndarray(lst):
-    result = []
-    for ele in lst:
-        result.append(np.copy(ele))
-    return result
 
 
 if __name__ == '__main__':
