@@ -1,6 +1,5 @@
 import doctest
 import numpy as np
-import math
 import time
 import os
 
@@ -203,7 +202,7 @@ def optimize_EPSILON_INIT(L_in, L_out):
     :param L_out: S_(l + 1)
     :return: Optimized EPSILON based on layer unit counts.
     """
-    return math.sqrt(6)/(math.sqrt(L_in + L_out))
+    return np.sqrt(6)/(np.sqrt(L_in + L_out))
 
 
 def change_range(Theta, EPSILON=1):
@@ -253,7 +252,7 @@ def sigmoid(z):
     >>> result > 0
     True
     """
-    return np.divide(1, (1 + np.power(math.e, -z)))
+    return np.divide(1, (1 + np.power(np.e, -z)))
 
 
 def save_training_info_to_file(directory, iteration_num=None, cost=None, accuracy=None, Theta=None):
@@ -318,8 +317,7 @@ class DataProcessor:
             outputs_b = np.zeros((np.size(output), np.size(unique_cat)))
             mask = np.repeat(np.matrix(unique_cat), np.size(outputs_b, axis=0), axis=0)
             output_2d = np.repeat(np.matrix(output).T, np.size(unique_cat), axis=1)
-            mask = mask == output_2d
-            outputs_b[mask] = 1
+            outputs_b = np.where(mask == output_2d, 1, 0)
 
         return unique_cat, outputs_b
 

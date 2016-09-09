@@ -49,10 +49,10 @@ def nn_forward_prop(X, Theta):
     a_l = util.add_ones(a_l)
     result = [a_l]
     for i, theta_l in enumerate(Theta):
-        a_l = (theta_l @ a_l.T).T
+        a_l = util.sigmoid(a_l @ theta_l.T)
         if i < len(Theta) - 1:
             a_l = util.add_ones(a_l)
-        result.append(util.sigmoid(a_l))
+        result.append(a_l)
     return result
 
 
@@ -89,7 +89,9 @@ def nn_J_Theta(h_theta_x, y, lamb=0, Theta=None):
     m = np.size(h_theta_x, axis=0)
     cost_y_is_0 = np.nan_to_num(ne.evaluate('(1 - y) * log(1 - h_theta_x)'))
     cost_y_is_1 = np.nan_to_num(ne.evaluate('y * log(h_theta_x)'))
-    cost_wo_regularization = -ne.evaluate('sum(cost_y_is_0 + cost_y_is_1)') / m
+    cost_y_is_0_sum = np.sum(cost_y_is_0)
+    cost_y_is_1_sum = np.sum(cost_y_is_1)
+    cost_wo_regularization = -(cost_y_is_0_sum + cost_y_is_1_sum) / m
     if Theta is None or len(Theta) == 0:
         theta_squared_sum = 0
     else:

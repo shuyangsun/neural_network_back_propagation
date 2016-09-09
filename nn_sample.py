@@ -12,13 +12,12 @@ augmented_matrix = np.append(X, y, axis=1)
 np.random.shuffle(augmented_matrix)
 X = augmented_matrix[:, :-1]
 y = augmented_matrix[:, -1]
-test_sample_size = 500
-test_ratio = test_sample_size / np.size(X, axis=0)
+test_ratio = 0.2
 # Learning rate
-alpha = 0.03
+alpha = 0.001
 # Regularization
 lamb = 1
-# Random Theta range
+# Random Theta rang
 EPSILON_INIT = 0
 
 trainer = nn.NeuralNetwork(X, y, test_ratio, alpha, lamb, EPSILON_INIT, 25)

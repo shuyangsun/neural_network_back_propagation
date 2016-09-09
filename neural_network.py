@@ -61,6 +61,8 @@ class NeuralNetwork:
 
             # Do gradient check without lambda on the first iteration if turned on.
             if grad_check and i is 0:
+                print('Started gradient checking...')
+                grad_check_start = time.time()
                 grad_check_result = alg.nn_grad_check(self.__X,
                                                       self.__y,
                                                       D,
@@ -71,6 +73,7 @@ class NeuralNetwork:
                     print(Exception('Gradient check did not pass.'))
                 else:
                     print('Passed gradient check.')
+                print('Used {0:.2f}s for gradient checking.'.format(time.time() - grad_check_start))
 
             # Update Theta after gradient checking.
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
