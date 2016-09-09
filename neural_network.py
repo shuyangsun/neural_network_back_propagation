@@ -6,9 +6,10 @@ import time
 
 
 class NeuralNetwork:
-    def __init__(self, X, y, test_ratio=0.1, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
+    def __init__(self, X, y, alpha=0.01, lamb=0, EPSILON_INIT=1, *S):
+        training_set_ratio = 0.6
         self.__n = np.size(X, axis=1)
-        training_count = math.floor(np.size(X, axis=0) * (1 - test_ratio))
+        training_count = math.floor(np.size(X, axis=0) * training_set_ratio)
         self.__X, self.__X_test = util.DataProcessor.partition(X, training_count)
         self.__y, self.__y_test = util.DataProcessor.partition(y, training_count)
         self.__m = np.size(self.__X, axis=0)
@@ -42,8 +43,9 @@ class NeuralNetwork:
 
             if (i + 1) is 2 or (i + 1) % 100 is 0:
                 print('-' * 50)
-                print('Iteration {0} cost is {1}.'.format(i + 1, cost_list[-1]))
-                print('Accuracy: {0:.2f}%.'.format(accuracy_list[-1]))
+                print('| Iteration: {0}'.format(i + 1))
+                print('| Cost of training set: {0}'.format(cost_list[-1]))
+                print('| Accuracy: {0:.2f}%'.format(accuracy_list[-1]))
                 print('-' * 50)
                 if save_to_file:
                     util.save_training_info_to_file(directory='Theta_' + str(start),
@@ -91,9 +93,9 @@ class NeuralNetwork:
 
             i += 1
         print('-' * 50)
-        print('Finished training, time used: {0}s.'.format(time.time() - start))
+        print('Finished training, time used: {0}s'.format(time.time() - start))
         print('Calculating error rate with test samples...')
-        print('Accuracy: {0:.2f}%.'.format(accuracy_list[-1]))
+        print('Accuracy: {0:.2f}%'.format(accuracy_list[-1]))
         return cost_list, accuracy_list, self.__Theta
 
     def predict(self, X):
