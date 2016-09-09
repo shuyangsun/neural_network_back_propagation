@@ -42,7 +42,7 @@ class NeuralNetwork:
         self.cost_cv_list = []
         self.accuracy_test_list = []
 
-    def train(self, iter_limit=0, time_limit=0, grad_check=True, save_to_file=False):
+    def train(self, iter_limit=0, time_limit=0, grad_check=True, info_print_frequency=10, save_to_file=False):
         print('Started training...')
         start = time.time()
         check_iter_limit = iter_limit is not 0
@@ -51,22 +51,15 @@ class NeuralNetwork:
         i = 0
         # Print iteration information and check iteration count or time limit.
         while (check_iter_limit and i < iter_limit) or not check_iter_limit:
-            if (i + 1) % 10 is 0:
-                time_elapsed = time.time() - start
-                print('Iteration {0}, time passed {1}s...'.format(i + 1, np.round(time_elapsed, 2)))
-                if time_limit is not 0 and time_elapsed > time_limit:
-                    break
-
-            if (i + 1) is 2 or (i + 1) % 100 is 0:
-                print('-' * 50)
-                print('| Iteration: {0}'.format(i + 1))
-                print('| Cost of training set: {0}'.format(self.cost_training_list[-1]))
-                print('| Cost of cross validation set: {0}'.format(self.cost_cv_list[-1]))
-                print('| Accuracy of testing set: {0:.2f}%'.format(self.accuracy_test_list[-1]))
-                print('-' * 50)
+            if i is not 0 and (i is 1 or (i is not 0 and i % info_print_frequency is 0)):
+                print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4:.2f}%'.format(i,
+                                                                                                                         time.time() - start,
+                                                                                                                         self.cost_training_list[-1],
+                                                                                                                         self.cost_cv_list[-1],
+                                                                                                                         self.accuracy_test_list[-1]))
                 if save_to_file:
                     util.save_training_info_to_file(directory='Theta_' + str(start),
-                                                    iteration_num=i + 1,
+                                                    iteration_num=i,
                                                     cost=self.cost_training_list[-1],
                                                     accuracy=self.accuracy_test_list[-1],
                                                     Theta=self.__Theta)
@@ -93,7 +86,11 @@ class NeuralNetwork:
                                       EPSILON=10 ** -4)
                 except alg.GradientCheckingFailsException as e:
                     print(e)
-
+                else:
+                    print('-' * 50)
+            elif i is 0:
+                print('-' * 50)
+            
             # Update Theta after gradient checking.
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
 
@@ -112,9 +109,16 @@ class NeuralNetwork:
                 self.__switch_to_single_precision()
 
             i += 1
-        print('-' * 50)
-        print('Finished training, time used: {0}s'.format(time.time() - start))
-        print('Accuracy of testing set: {0:.2f}%'.format(self.accuracy_test_list[-1]))
+            
+            if time_limit is not 0 and time.time() - start > time_limit:
+                break
+
+        print('Finished training.')
+        print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4}'.format(i,
+                                                                                                            time.time() - start,
+                                                                                                            self.cost_training_list[-1],
+                                                                                                            self.cost_cv_list[-1],
+                                                                                                            self.accuracy_test_list[-1]))
         print('-' * 50)
 
     def predict(self, X):
@@ -153,7 +157,7 @@ class NeuralNetwork:
         figure.plot(self.accuracy_test_list, color=color)
         p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color, alpha=0.25)
 
-    def visualize_Theta(self, cmap='Greys_r', origin='lower'):
+    def visualize_Theta(self, cmap='Greys_r'):
         for l, theta_l in enumerate(self.__Theta):
             plt.figure('Theta({0})'.format(l + 1), figsize=(30, 30))
             theta_l_no_bias_units = np.delete(theta_l, obj=0, axis=1)
@@ -171,7 +175,7 @@ class NeuralNetwork:
                 figure = plt.subplot(width_num, height_num, l + 1)
                 figure.axes.get_xaxis().set_visible(False)
                 figure.axes.get_yaxis().set_visible(False)
-                plt.imshow(matrix, cmap=cmap, origin=origin)
+                plt.imshow(matrix, cmap=cmap)
             plt.tight_layout()
 
     def show_plot(self):
