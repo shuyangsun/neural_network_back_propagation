@@ -365,7 +365,7 @@ class DataProcessor:
     def get_unique_categories(output, case_sensitive=True):
         if not case_sensitive:
             output = [x.lower() if isinstance(x, str) else x for x in output]
-        output = output.flatten('F')
+        output = np.hstack(output)
         return np.unique(output)
 
     @staticmethod
@@ -373,7 +373,7 @@ class DataProcessor:
         unique_cat = DataProcessor.get_unique_categories(output, case_sensitive)
 
         if np.size(unique_cat) <= 2:
-            outputs_b = np.zeros(np.size(output)).T
+            outputs_b = np.zeros((np.size(output), 1))
             mask = (output == unique_cat[0]).flatten('F')
             outputs_b[mask] = 1
         else:

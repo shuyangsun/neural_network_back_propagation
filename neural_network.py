@@ -27,7 +27,7 @@ class NeuralNetwork:
 
         self.__m = np.size(self.__X, axis=0)
         self.__unique_cat, self.__y_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y)
-        _t, self.__y_cv_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y_cv)
+        _, self.__y_cv_b = util.DataProcessor.get_unique_categories_and_binary_outputs(self.__y_cv)
         self.__K = np.size(self.__unique_cat)
         self.__num_units_hidden_layer_lst = num_units_hidden_layer
         self.__lamb = lamb
@@ -114,11 +114,11 @@ class NeuralNetwork:
                 break
 
         print('Finished training.')
-        print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4}'.format(i,
-                                                                                                            time.time() - start,
-                                                                                                            self.cost_training_list[-1],
-                                                                                                            self.cost_cv_list[-1],
-                                                                                                            self.accuracy_test_list[-1]))
+        print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4:.2f}%'.format(i,
+                                                                                                                 time.time() - start,
+                                                                                                                 self.cost_training_list[-1],
+                                                                                                                 self.cost_cv_list[-1],
+                                                                                                                 self.accuracy_test_list[-1]))
         print('-' * 50)
 
     def predict(self, X):
@@ -157,7 +157,7 @@ class NeuralNetwork:
         figure.plot(self.accuracy_test_list, color=color)
         p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color, alpha=0.25)
 
-    def visualize_Theta(self, cmap='Greys_r'):
+    def visualize_Theta(self, cmap='Greys_r', invert=False):
         for l, theta_l in enumerate(self.__Theta):
             plt.figure('Theta({0})'.format(l + 1), figsize=(30, 30))
             theta_l_no_bias_units = np.delete(theta_l, obj=0, axis=1)
@@ -175,7 +175,7 @@ class NeuralNetwork:
                 figure = plt.subplot(width_num, height_num, l + 1)
                 figure.axes.get_xaxis().set_visible(False)
                 figure.axes.get_yaxis().set_visible(False)
-                plt.imshow(matrix, cmap=cmap)
+                plt.imshow(-matrix if invert else matrix, cmap=cmap)
             plt.tight_layout()
 
     def show_plot(self):
@@ -183,7 +183,7 @@ class NeuralNetwork:
 
     def __testing_sample_accuracy(self):
         predict_result = self.predict(self.__X_test)
-        correct_count = np.count_nonzero(predict_result == self.__y_test)
+        correct_count = np.count_nonzero(predict_result.flatten('C') == self.__y_test.flatten('C'))
         error_rate = 1 - (correct_count / np.size(self.__y_test, axis=0))
         return (1 - error_rate) * 100
 
