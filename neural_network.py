@@ -1,10 +1,11 @@
-import util
-import nn_alg as alg
-import numpy as np
-import matplotlib.pyplot as plt
 import math
 import time
+
+import matplotlib.pyplot as plt
+import nn_alg as alg
+import numpy as np
 import pylab as p
+import util
 
 
 class NeuralNetwork:
@@ -52,7 +53,7 @@ class NeuralNetwork:
         # Print iteration information and check iteration count or time limit.
         while (check_iter_limit and i < iter_limit) or not check_iter_limit:
             if i is not 0 and (i is 1 or (i is not 0 and i % info_print_frequency is 0)):
-                print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4:.2f}%'.format(i,
+                print('Iter: {0}, duration: {1:.2f}s, J_train(θ): {2}, J_cv(θ): {3}, test set accuracy: {4:.2f}%'.format(i,
                                                                                                                          time.time() - start,
                                                                                                                          self.cost_training_list[-1],
                                                                                                                          self.cost_cv_list[-1],
@@ -97,11 +98,11 @@ class NeuralNetwork:
             # Record cost and accuracy change
             self.cost_training_list.append(alg.nn_J_Theta(self.__neurons[-1],
                                                           self.__y_b,
-                                                          lamb=0 if i is 0 else self.__lamb,
+                                                          lamb=0,
                                                           Theta=self.__Theta))
             self.cost_cv_list.append(alg.nn_J_Theta(alg.nn_forward_prop(self.__X_cv, self.__Theta)[-1],
                                                     self.__y_cv_b,
-                                                    lamb=0 if i is 0 else self.__lamb,
+                                                    lamb=0,
                                                     Theta=self.__Theta))
             self.accuracy_test_list.append(self.__testing_sample_accuracy())
 
@@ -114,7 +115,7 @@ class NeuralNetwork:
                 break
 
         print('Finished training.')
-        print('Iter: {0}, duration: {1:.2f}s, J(θ_train): {2}, J(θ_cv): {3}, test set accuracy: {4:.2f}%'.format(i,
+        print('Iter: {0}, duration: {1:.2f}s, J_train(θ): {2}, J_cv(θ): {3}, test set accuracy: {4:.2f}%'.format(i,
                                                                                                                  time.time() - start,
                                                                                                                  self.cost_training_list[-1],
                                                                                                                  self.cost_cv_list[-1],
@@ -127,35 +128,33 @@ class NeuralNetwork:
         mask = np.argmax(result, axis=1)
         return self.__unique_cat[mask.T]
 
-    def plot_training_info(self, color='#00BFFF'):
-        plt.figure('Training Info', figsize=(30, 30))
-        color=color
+    def plot_training_info(self,
+                           color_train='#00BFFF',
+                           color_cv='#FFFA6C',
+                           color_test='#69D290'):
+        plt.figure('Training Info', figsize=(30, 15))
 
-        # Cost training set plot
-        figure = plt.subplot(2, 2, 1)
-        plt.title('Cost of Training Set')
+        # Cost plot
+        figure = plt.subplot(1, 2, 1)
+        plt.title('J(θ) per Iteration')
         plt.xlabel('iteration')
-        plt.ylabel('cost')
-        figure.plot(self.cost_training_list, color=color)
+        plt.ylabel('J(θ)')
+        figure.plot(self.cost_training_list, color=color_train, label='J_train(θ)')
         p.fill_between(range(len(self.cost_training_list)),
-                       self.cost_training_list, facecolor=color,
+                       self.cost_training_list, facecolor=color_train,
                        alpha=0.25)
 
-        # Cost training set plot
-        figure = plt.subplot(2, 2, 2)
-        plt.title('Cost of Cross Validation Set')
-        plt.xlabel('iteration')
-        plt.ylabel('cost')
-        figure.plot(self.cost_cv_list, color=color)
-        p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color, alpha=0.25)
+        figure.plot(self.cost_cv_list, color=color_cv, label='J_cost(θ)')
+        p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color_cv, alpha=0.25)
+        plt.legend()
 
         # Accuracy plot
-        figure = plt.subplot(2, 2, 3)
+        figure = plt.subplot(1, 2, 2)
         plt.title('Accuracy of Testing Set')
         plt.xlabel('iteration')
         plt.ylabel('accuracy rate (%)')
-        figure.plot(self.accuracy_test_list, color=color)
-        p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color, alpha=0.25)
+        figure.plot(self.accuracy_test_list, color=color_test)
+        p.fill_between(range(len(self.accuracy_test_list)), self.accuracy_test_list, facecolor=color_test, alpha=0.25)
 
     def visualize_Theta(self, cmap='Greys_r', invert=False):
         for l, theta_l in enumerate(self.__Theta):
