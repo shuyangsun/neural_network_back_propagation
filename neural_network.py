@@ -136,15 +136,15 @@ class NeuralNetwork:
 
         # Cost plot
         figure = plt.subplot(1, 2, 1)
-        plt.title('J(θ) per Iteration')
+        plt.title('J(Theta) per Iteration')
         plt.xlabel('iteration')
-        plt.ylabel('J(θ)')
-        figure.plot(self.cost_training_list, color=color_train, label='J_train(θ)')
+        plt.ylabel('J(Theta)')
+        figure.plot(self.cost_training_list, color=color_train, label='J_train(Theta)')
         p.fill_between(range(len(self.cost_training_list)),
                        self.cost_training_list, facecolor=color_train,
                        alpha=0.25)
 
-        figure.plot(self.cost_cv_list, color=color_cv, label='J_cost(θ)')
+        figure.plot(self.cost_cv_list, color=color_cv, label='J_cost(Theta)')
         p.fill_between(range(len(self.cost_cv_list)), self.cost_cv_list, facecolor=color_cv, alpha=0.25)
         plt.legend()
 
