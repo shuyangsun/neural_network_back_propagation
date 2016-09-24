@@ -91,7 +91,7 @@ class NeuralNetwork:
                     print('-' * 50)
             elif i is 0:
                 print('-' * 50)
-            
+
             # Update Theta after gradient checking.
             self.__Theta = alg.nn_update_Theta_with_D(self.__Theta, D, alpha=self.__alpha, dtype=self.__dtype)
 
@@ -110,7 +110,7 @@ class NeuralNetwork:
                 self.__switch_to_single_precision()
 
             i += 1
-            
+
             if time_limit is not 0 and time.time() - start > time_limit:
                 break
 
